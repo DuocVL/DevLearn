@@ -35,4 +35,6 @@ class Comment {
       updatedAt: json['updatedAt'],
     );
   }
+
+  
 }
