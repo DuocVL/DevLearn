@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:devlearn/core/widgets/savedbutton.dart';
-import 'package:devlearn/screens/problem/problem_item.dart';
+import 'package:devlearn/screens/widgets/savedbutton.dart';
+import 'package:devlearn/screens/widgets/problem_item.dart';
 import 'package:devlearn/data/models/problem_summary.dart';
 
 void main() {
