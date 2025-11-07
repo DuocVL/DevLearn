@@ -1,7 +1,7 @@
 import 'package:devlearn/screens/post/post_screen.dart';
 import 'package:flutter/material.dart';
 import '../../data/models/post.dart';
-import 'package:intl/intl.dart';
+import '../../core/utils/helpers.dart';
 
 class PostCard extends StatefulWidget {
   final Post post;
@@ -22,7 +22,7 @@ class _PostCardState extends State<PostCard> {
 
   @override
   Widget build(BuildContext context) {
-    final timeAgo = _timeAgo(widget.post.createdAt);
+    final timeago = timeAgo(widget.post.createdAt);
 
     return InkWell(
       onTap: () {
@@ -57,7 +57,7 @@ class _PostCardState extends State<PostCard> {
                   ),
                   const SizedBox(width: 4),
                   Text(
-                    '· $timeAgo',
+                    '· $timeago',
                     style: const TextStyle(color: Colors.white38, fontSize: 12),
                   ),
                 ],
@@ -100,17 +100,17 @@ class _PostCardState extends State<PostCard> {
                           const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         border: Border.all(
-                            color: isLiked ? Colors.redAccent : Colors.white30),
+                            color: isLiked ? Colors.amberAccent : Colors.white30),
                         borderRadius: BorderRadius.circular(30),
                         color: isLiked
-                            ? Colors.redAccent.withOpacity(0.15)
+                            ? Colors.amberAccent.withOpacity(0.15)
                             : Colors.transparent,
                       ),
                       child: Row(
                         children: [
                           Icon(
-                            isLiked ? Icons.favorite : Icons.favorite_border,
-                            color: isLiked ? Colors.redAccent : Colors.white54,
+                            isLiked ? Icons.thumb_up : Icons.thumb_up_outlined,
+                            color: isLiked ? Colors.amber : Colors.white54,
                             size: 18,
                           ),
                           const SizedBox(width: 4),
@@ -149,11 +149,5 @@ class _PostCardState extends State<PostCard> {
     );
   }
 
-  String _timeAgo(DateTime date) {
-    final diff = DateTime.now().difference(date);
-    if (diff.inMinutes < 1) return 'Vừa xong';
-    if (diff.inHours < 1) return '${diff.inMinutes} phút trước';
-    if (diff.inDays < 1) return '${diff.inHours} giờ trước';
-    return DateFormat('dd/MM/yyyy').format(date);
-  }
+
 }
