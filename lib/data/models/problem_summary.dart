@@ -16,13 +16,22 @@ class ProblemSummary {
   });
 
   factory ProblemSummary.fromJson(Map<String, dynamic> json){
+    String id = (json['_id'] ?? json['id'] ?? '').toString();
+    double toDouble(dynamic v) {
+      if (v == null) return 0.0;
+      if (v is double) return v;
+      if (v is int) return v.toDouble();
+      if (v is String) return double.tryParse(v) ?? 0.0;
+      return 0.0;
+    }
+
     return ProblemSummary(
-      id: json['id'], 
-      title: json['title'], 
-      difficulty: json['difficulty'], 
-      acceptance: json['acceptance'], 
-      solved: json['solved'], 
-      saved: json['saved'],
+      id: id,
+      title: (json['title'] ?? '').toString(),
+      difficulty: (json['difficulty'] ?? 'Unknown').toString(),
+      acceptance: toDouble(json['acceptance']),
+      solved: json['solved'] == true,
+      saved: json['saved'] == true,
     );
   }
 }

@@ -6,6 +6,8 @@ import 'package:devlearn/screens/home/profile_page.dart';
 import 'package:devlearn/screens/home/tutorial_page.dart';
 import 'package:flutter/material.dart';
 
+// Home screen wrapper with adaptive AppBar and FAB suitable for a learning app
+
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -31,8 +33,41 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final titles = ['Home', 'Tutorials', 'Problems', 'Posts', 'Profile'];
     return Scaffold(
-      body: _pages[_selectedIndex],
+      appBar: AppBar(
+        title: Text(titles[_selectedIndex], style: const TextStyle(fontWeight: FontWeight.w600)),
+        elevation: 1,
+        actions: [
+          if (_selectedIndex == 0 || _selectedIndex == 2)
+            IconButton(
+              tooltip: 'Search',
+              icon: const Icon(Icons.search),
+              onPressed: () {
+                // optional: open search UI
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Open search')));
+              },
+            ),
+          Padding(
+            padding: const EdgeInsets.only(right: 12.0),
+            child: CircleAvatar(radius: 16, backgroundColor: Theme.of(context).colorScheme.primary, child: const Icon(Icons.person, size: 18, color: Colors.white)),
+          ),
+        ],
+      ),
+      body: IndexedStack(
+        index: _selectedIndex,
+        children: _pages,
+      ),
+      floatingActionButton: _selectedIndex == 3
+          ? FloatingActionButton.extended(
+              onPressed: () {
+                // open create post flow
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Create new post (TBD)')));
+              },
+              label: const Text('New Post'),
+              icon: const Icon(Icons.edit),
+            )
+          : null,
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         type: BottomNavigationBarType.fixed,

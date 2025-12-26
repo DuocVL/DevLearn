@@ -5,10 +5,10 @@ class Problem {
   final String title;
   final String description;
   final String difficulty;
-  final List<String>? tags;
-  final List<Example>? examples;
-  final List<String>? constraints; 
-  final List<String>? hints;
+  final List<String> tags;
+  final List<Example> examples;
+  final List<String> constraints; 
+  final List<String> hints;
   final int likeCount;
   final int commentCount;
   final int totalSubmissions;
@@ -19,10 +19,10 @@ class Problem {
     required this.title,
     required this.description,
     required this.difficulty,
-    this.tags,
-    this.examples,
-    this.constraints,
-    this.hints,
+    required this.tags,
+    required this.examples,
+    required this.constraints,
+    required this.hints,
     required this.likeCount,
     required this.commentCount,
     required this.totalSubmissions,

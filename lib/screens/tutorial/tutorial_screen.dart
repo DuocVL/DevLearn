@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../data/models/lesson_summary.dart';
-import '../../data/models/tutorial.dart'; // Đường dẫn model bạn tạo ở trên
+import '../../data/models/tutorial.dart'; 
+import '../lesson/lesson_screen.dart';
 
 class TutorialScreen extends StatefulWidget {
   final String tutorialId;
@@ -108,8 +109,15 @@ class _TutorialScreenState extends State<TutorialScreen> {
                       : const Icon(Icons.circle_outlined, color: Colors.grey),
                   onTap: () {
                     // chuyển sang LessonScreen
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => LessonScreen(idLesson: lesson.id),
+                      ),
+                    );
                   },
-                )),
+                )
+              ),
           ],
         ),
       ),

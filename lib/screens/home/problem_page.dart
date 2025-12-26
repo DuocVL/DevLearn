@@ -3,6 +3,7 @@ import 'package:devlearn/screens/widgets/problem_item.dart';
 import 'package:devlearn/screens/widgets/search_widget.dart';
 import 'package:devlearn/data/models/problem_summary.dart';
 import 'package:flutter/material.dart';
+import '../../data/repositories/problem_repository.dart';
 
 class ProblemPage extends StatefulWidget {
   const ProblemPage({super.key});
@@ -20,9 +21,48 @@ class _ProblemPageState extends State<ProblemPage> {
     "All", "Easy", "Medium", "Hard", "Solved", "Revision"
   ];
 
-  final List<Color> colorFilters = [
-    
-  ];
+  final ScrollController _scrollController = ScrollController();
+
+  final List<ProblemSummary> _problems = [];
+  bool _isLoading = false;
+  bool _hasMore = true;
+  int _page = 1;
+
+  final _repo = ProblemRepository();
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchProblems();
+    _scrollController.addListener(_onScroll);
+  }
+
+   Future<void> _fetchProblems() async {
+    if (_isLoading || !_hasMore) return;
+    setState(() => _isLoading = true);
+
+    final list = await _repo.getProblems(page: _page, limit: 20, difficulty: _selectedFilter == 'All' ? null : _selectedFilter);
+
+    setState(() {
+      _problems.addAll(list);
+      _isLoading = false;
+      _page++;
+      if (list.length < 20) _hasMore = false;
+    });
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 100) {
+      _fetchProblems();
+    }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -41,11 +81,21 @@ class _ProblemPageState extends State<ProblemPage> {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          _buildFilterBar(),
-          const SizedBox(height: 8),
-        ],
+      body: ListView.builder(
+        controller: _scrollController,
+        itemCount: _problems.length + (_isLoading ? 1 : 0),
+        itemBuilder: (context, index) {
+          if (index < _problems.length) {
+            return ProblemItem(problemSummary: _problems[index]);
+          } else {
+            return const Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Center(
+                child: CircularProgressIndicator(color: Colors.blueAccent),
+              ),
+            );
+          }
+        },
       ),
     );
   }
@@ -66,7 +116,7 @@ class _ProblemPageState extends State<ProblemPage> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
               decoration: BoxDecoration(
-                color: isSelected ? Colors.blueAccent : const Color(0xFF1C1C1E),
+                color: isSelected ? Colors.blueAccent : const Color(0xFF1C1C2E),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(

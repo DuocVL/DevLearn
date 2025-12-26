@@ -27,6 +27,26 @@ class PostRepository {
     return null;
   }
 
+  Future<List<Post>> getPosts({int page = 1, int limit = 20, String? tag}) async {
+    final res = await _postService.getPosts(page: page, limit: limit, tag: tag);
+    if (res.statusCode == 200) {
+      final json = jsonDecode(res.body);
+      final data = json['data'] as List<dynamic>? ?? [];
+      return data.map((e) => Post.fromJson(e)).toList();
+    } else if (res.statusCode == 401) {
+      final ok = await _refreshTokenRepository.refreshToken();
+      if (ok) {
+        final res2 = await _postService.getPosts(page: page, limit: limit, tag: tag);
+        if (res2.statusCode == 200) {
+          final json = jsonDecode(res2.body);
+          final data = json['data'] as List<dynamic>? ?? [];
+          return data.map((e) => Post.fromJson(e)).toList();
+        }
+      }
+    }
+    return [];
+  }
+
   
   
 }
