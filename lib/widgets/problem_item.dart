@@ -1,5 +1,5 @@
 import 'package:devlearn/data/models/problem_summary.dart';
-import 'package:devlearn/screens/problem/problem_screen.dart';
+import 'package:devlearn/features/problem/problem_screen.dart';
 import 'package:flutter/material.dart';
 
 class ProblemItem extends StatefulWidget {
@@ -45,12 +45,12 @@ class _ProblemItemState extends State<ProblemItem> {
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: () {
-          // Navigator.push(
-          //   context,
-          //   MaterialPageRoute(
-          //     builder: (context) => ProblemScreen(idProblem: p.id),
-          //   ),
-          // );
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ProblemScreen(idProblem: p.id),
+            ),
+          );
         },
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -125,4 +125,3 @@ class _ProblemItemState extends State<ProblemItem> {
     );
   }
 }
-

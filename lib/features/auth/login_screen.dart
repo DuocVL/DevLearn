@@ -155,7 +155,7 @@ class _LoginScreenState extends State<LoginScreen> {
 	}
 
 	void _forgotPassword() {
-		Navigator.of(context).pushNamed(RouteName.forgot);
+		Navigator.of(context).pushNamed(RouteName.forgotPassword);
 	}
 
 	@override

@@ -1,9 +1,9 @@
-import 'package:devlearn/screens/widgets/bottom_nav_items.dart';
-import 'package:devlearn/screens/home/home_page.dart';
-import 'package:devlearn/screens/home/post_page.dart';
-import 'package:devlearn/screens/home/problem_page.dart';
-import 'package:devlearn/screens/home/profile_page.dart';
-import 'package:devlearn/screens/home/tutorial_page.dart';
+import 'package:devlearn/widgets/bottom_nav_items.dart';
+import 'package:devlearn/features/home/pages/home_page.dart';
+import 'package:devlearn/features/home/post_page.dart';
+import 'package:devlearn/features/home/problem_page.dart';
+import 'package:devlearn/features/home/pages/profile_page.dart';
+import 'package:devlearn/features/home/pages/tutorial_page.dart';
 import 'package:flutter/material.dart';
 
 // Home screen wrapper with adaptive AppBar and FAB suitable for a learning app
@@ -58,6 +58,14 @@ class _HomeScreenState extends State<HomeScreen> {
         index: _selectedIndex,
         children: _pages,
       ),
+      floatingActionButton: _selectedIndex == 3
+          ? FloatingActionButton(
+              onPressed: () {
+                Navigator.pushNamed(context, '/create_post');
+              },
+              child: const Icon(Icons.add),
+            )
+          : null,
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         type: BottomNavigationBarType.fixed,

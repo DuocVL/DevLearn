@@ -2,5 +2,21 @@
   "@@locale": "en",
   "hello": "Hello!",
   "language": "Language",
-  "welcome": "Welcome to our app"
+  "welcome": "Welcome to our application",
+  "edit": "Edit",
+  "logout": "Logout",
+  "solved": "Solved",
+  "posts": "Posts",
+  "followers": "Followers",
+  "registerSubtitle": "Enter your information to register for a DevLearn account",
+  "forgotPassword": "Forgot password?",
+  "sendCode": "Send code",
+  "resetPassword": "Reset password",
+  "email": "Email",
+  "password": "Password",
+  "name": "Name",
+  "code": "Code",
+  "newPassword": "New password",
+  "login": "Login",
+  "register": "Register"
 }

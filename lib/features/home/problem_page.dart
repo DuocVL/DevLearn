@@ -1,7 +1,6 @@
 import 'package:devlearn/data/models/problem_summary.dart';
 import 'package:devlearn/data/repositories/problem_repository.dart';
-import 'package:devlearn/screens/widgets/problem_item.dart';
-import 'package:devlearn/screens/widgets/search_widget.dart';
+import 'package:devlearn/widgets/problem_item.dart';
 import 'package:flutter/material.dart';
 
 class ProblemPage extends StatefulWidget {
@@ -107,18 +106,12 @@ class _ProblemPageState extends State<ProblemPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: SearchWidget(controller: _searchController),
-        elevation: 0,
-      ),
-      body: Column(
+    return Column(
         children: [
           _buildFilterBar(),
           Expanded(child: _buildBody()),
         ],
-      ),
-    );
+      );
   }
 
   Widget _buildBody() {

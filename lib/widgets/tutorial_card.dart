@@ -1,5 +1,5 @@
 import 'package:devlearn/data/models/tutorial_summary.dart';
-import 'package:devlearn/screens/tutorial/tutorial_screen.dart';
+import 'package:devlearn/features/tutorial/tutorial_screen.dart';
 import 'package:flutter/material.dart';
 
 class TutorialCard extends StatelessWidget {
@@ -16,12 +16,12 @@ class TutorialCard extends StatelessWidget {
       child: InkWell(
         onTap: () {
           // Temporarily disabled until TutorialScreen is ready
-          // Navigator.push(
-          //   context,
-          //   MaterialPageRoute(
-          //     builder: (context) => TutorialScreen(tutorialId: tutorial.id),
-          //   ),
-          // );
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => TutorialScreen(tutorialId: tutorial.id),
+            ),
+          );
         },
         child: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -69,4 +69,3 @@ class TutorialCard extends StatelessWidget {
     );
   }
 }
-

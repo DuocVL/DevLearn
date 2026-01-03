@@ -2,27 +2,28 @@ class Lesson {
   final String id;
   final String title;
   final String content;
-  final int order;
-  final int likeCount;
-  final int views;
 
-  Lesson({
-    required this.id,
-    required this.title,
-    required this.content,
-    required this.order,
-    required this.likeCount,
-    required this.views,
-  });
+  Lesson({required this.id, required this.title, required this.content});
 
-  factory Lesson.fromJson(Map<String, dynamic> json){
+  factory Lesson.fromJson(Map<String, dynamic> json) {
     return Lesson(
-      id: json['id'], 
-      title: json['title'], 
-      content: json['content'], 
-      order: json['order'], 
-      likeCount: json['likeCount'], 
-      views: json['view'],
+      id: json['_id'],
+      title: json['title'],
+      content: json['content'],
+    );
+  }
+}
+
+class LessonSummary {
+  final String id;
+  final String title;
+
+  LessonSummary({required this.id, required this.title});
+
+  factory LessonSummary.fromJson(Map<String, dynamic> json) {
+    return LessonSummary(
+      id: json['_id'],
+      title: json['title'],
     );
   }
 }

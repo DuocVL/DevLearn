@@ -25,6 +25,12 @@ class AuthService {
     return headers;
   }
 
+  Future<http.Response> getProfile() async {
+    final url = Uri.parse('$baseurl/me');
+    final response = await http.get(url, headers: await _jsonHeaders());
+    return response;
+  }
+
   Future<http.Response> login(String email, String password) async {
     final url = Uri.parse('$baseurl/login');
     final response = await http.post(

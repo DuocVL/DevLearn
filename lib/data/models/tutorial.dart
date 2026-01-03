@@ -1,34 +1,40 @@
-import 'lesson_summary.dart';
+import 'package:devlearn/data/models/lesson.dart';
+
 class Tutorial {
   final String id;
   final String title;
   final String description;
-  final List<String> tags;
-  final int totalViews;
   final List<LessonSummary> lessons;
-  final double progress;
 
   Tutorial({
     required this.id,
     required this.title,
     required this.description,
-    required this.tags,
-    required this.totalViews,
     required this.lessons,
-    required this.progress,
   });
 
-  factory Tutorial.fromJson(Map<String, dynamic> json){
+  factory Tutorial.fromJson(Map<String, dynamic> json) {
     return Tutorial(
-      id: json['id'], 
-      title: json['title'], 
-      description: json['description'], 
-      tags: json['tags'] as List<String>, 
-      totalViews: json['totalViews'],
-      lessons: (json['lessons'] as List<dynamic>)
-          .map((e) => LessonSummary.fromJson(e))
+      id: json['_id'],
+      title: json['title'],
+      description: json['description'],
+      lessons: (json['lessons'] as List)
+          .map((i) => LessonSummary.fromJson(i))
           .toList(),
-      progress: (json['progress'] ?? 0).toDouble(),
+    );
+  }
+}
+
+class TutorialSummary {
+  final String id;
+  final String title;
+
+  TutorialSummary({required this.id, required this.title});
+
+  factory TutorialSummary.fromJson(Map<String, dynamic> json) {
+    return TutorialSummary(
+      id: json['_id'],
+      title: json['title'],
     );
   }
 }

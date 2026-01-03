@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../../data/repositories/auth_repository.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
@@ -91,8 +92,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
-      appBar: AppBar(title: const Text('Quên mật khẩu')),
+      appBar: AppBar(title: Text(l10n.forgotPassword)),
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
@@ -109,7 +111,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Text('Khôi phục mật khẩu', style: theme.textTheme.titleLarge),
+                      Text(l10n.resetPassword, style: theme.textTheme.titleLarge),
                       const SizedBox(height: 8),
                       Text(
                         _codeSent ? 'Nhập mã đã gửi và đặt mật khẩu mới' : 'Nhập email để nhận mã đặt lại mật khẩu',
@@ -157,7 +159,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                           height: 48,
                           child: ElevatedButton(
                             onPressed: _loading ? null : _resetPassword,
-                            child: _loading ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)) : const Text('Đặt lại mật khẩu'),
+                            child: _loading ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)) : Text(l10n.resetPassword),
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -170,7 +172,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                           height: 48,
                           child: ElevatedButton(
                             onPressed: _loading ? null : _sendCode,
-                            child: _loading ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)) : const Text('Gửi mã'),
+                            child: _loading ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)) : Text(l10n.sendCode),
                           ),
                         ),
                       ],

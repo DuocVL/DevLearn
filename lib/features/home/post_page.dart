@@ -1,7 +1,7 @@
 import 'package:devlearn/data/models/post.dart';
 import 'package:devlearn/data/repositories/post_repository.dart';
 import 'package:devlearn/routes/route_name.dart';
-import 'package:devlearn/screens/widgets/post_item.dart';
+import 'package:devlearn/widgets/post_item.dart';
 import 'package:flutter/material.dart';
 
 class PostPage extends StatefulWidget {
@@ -33,20 +33,7 @@ class _PostPageState extends State<PostPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Bài viết'),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          final result = await Navigator.pushNamed(context, RouteName.createPost);
-          if (result == true && mounted) {
-            _refresh();
-          }
-        },
-        child: const Icon(Icons.add),
-      ),
-      body: RefreshIndicator(
+    return RefreshIndicator(
         onRefresh: _refresh,
         child: FutureBuilder<List<Post>>(
           future: _postsFuture,
@@ -110,7 +97,6 @@ class _PostPageState extends State<PostPage> {
             );
           },
         ),
-      ),
-    );
+      );
   }
 }

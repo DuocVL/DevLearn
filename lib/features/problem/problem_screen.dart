@@ -1,8 +1,8 @@
-import 'package:devlearn/screens/widgets/problem_bottom_actions.dart';
+import 'package:devlearn/widgets/problem_bottom_actions.dart';
 import 'package:flutter/material.dart';
 import 'package:devlearn/data/models/problem.dart';
 import 'package:devlearn/data/models/example.dart';
-import '../widgets/SectionTitle.dart';
+import '../../widgets/section_title.dart';
 
 class ProblemScreen extends StatefulWidget {
   final String idProblem; // ID truyền từ danh sách

@@ -2,5 +2,21 @@
   "@@locale": "vi",
   "hello": "Xin chào!",
   "language": "Ngôn ngữ",
-  "welcome": "Chào mừng bạn đến với ứng dụng của chúng tôi"
+  "welcome": "Chào mừng bạn đến với ứng dụng của chúng tôi",
+  "edit": "Chỉnh sửa",
+  "logout": "Đăng xuất",
+  "solved": "Đã giải",
+  "posts": "Bài viết",
+  "followers": "Người theo dõi",
+  "registerSubtitle": "Nhập thông tin để đăng ký tài khoản DevLearn",
+  "forgotPassword": "Quên mật khẩu?",
+  "sendCode": "Gửi mã",
+  "resetPassword": "Đặt lại mật khẩu",
+  "email": "Email",
+  "password": "Mật khẩu",
+  "name": "Tên",
+  "code": "Mã",
+  "newPassword": "Mật khẩu mới",
+  "login": "Đăng nhập",
+  "register": "Đăng ký"
 }
