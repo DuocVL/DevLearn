@@ -58,16 +58,6 @@ class _HomeScreenState extends State<HomeScreen> {
         index: _selectedIndex,
         children: _pages,
       ),
-      floatingActionButton: _selectedIndex == 3
-          ? FloatingActionButton.extended(
-              onPressed: () {
-                // open create post flow
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Create new post (TBD)')));
-              },
-              label: const Text('New Post'),
-              icon: const Icon(Icons.edit),
-            )
-          : null,
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         type: BottomNavigationBarType.fixed,

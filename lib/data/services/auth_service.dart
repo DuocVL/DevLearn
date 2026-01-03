@@ -3,20 +3,18 @@ import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class AuthService {
-  AuthService({String? baseUrl}) : baseurl = baseUrl ?? _defaultBaseUrl();
+  AuthService({String? baseUrl}) : baseurl = baseUrl ?? _envOrDefault();
 
   final String baseurl;
 
-  static String _defaultBaseUrl() {
-    // For Android emulator use 10.0.2.2 to reach host machine.
-    if (kIsWeb) return 'http://localhost:4000/auth';
-    try {
-      if (Platform.isAndroid) return 'http://10.0.2.2:4000/auth';
-      if (Platform.isIOS) return 'http://localhost:4000/auth';
-    } catch (_) {}
-    return 'http://localhost:4000/auth';
+  static String _envOrDefault() {
+    final env = dotenv.env['BACKEND_URL'];
+    if (env != null && env.isNotEmpty) return '${env.replaceAll(RegExp(r'/$'), '')}/auth';
+    // Default to Android emulator host if BACKEND_URL not provided.
+    return 'http://10.0.2.2:4000/auth';
   }
   final _storage = const FlutterSecureStorage();
 

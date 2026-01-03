@@ -11,10 +11,6 @@ class TutorialPage extends StatefulWidget {
 
 class _TutorialPageState extends State<TutorialPage> {
   final List<TutorialSummary> tutorials = [
-    TutorialSummary(id: 't1', title: 'Flutter Basics'),
-    TutorialSummary(id: 't2', title: 'State Management'),
-    TutorialSummary(id: 't3', title: 'Networking & REST API'),
-    TutorialSummary(id: 't4', title: 'Algorithms for Interviews'),
   ];
 
   @override

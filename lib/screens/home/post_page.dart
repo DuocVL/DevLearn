@@ -1,10 +1,8 @@
+import 'package:devlearn/data/models/post.dart';
+import 'package:devlearn/data/repositories/post_repository.dart';
+import 'package:devlearn/routes/route_name.dart';
+import 'package:devlearn/screens/widgets/post_item.dart';
 import 'package:flutter/material.dart';
-import '../../data/models/post.dart';
-import '../widgets/post_item.dart';
-import '../../data/repositories/post_repository.dart';
-import '../../routes/route_name.dart';
-
-// Post list uses backend when available; falls back to empty list
 
 class PostPage extends StatefulWidget {
   const PostPage({super.key});
@@ -14,61 +12,105 @@ class PostPage extends StatefulWidget {
 }
 
 class _PostPageState extends State<PostPage> {
-  final List<Post> _posts = [];
   final _repo = PostRepository();
-  bool _loading = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          final res = await Navigator.pushNamed(context, RouteName.createPost);
-          if (res == true) {
-            await _loadPosts(refresh: true);
-          }
-        },
-        backgroundColor: const Color(0xFF2E7DFF),
-        child: const Icon(Icons.add),
-      ),
-      body: RefreshIndicator(
-        onRefresh: () async {
-          await _loadPosts(refresh: true);
-        },
-        child: _loading
-            ? const Center(child: CircularProgressIndicator())
-            : ListView.separated(
-                padding: const EdgeInsets.all(12),
-                itemCount: _posts.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 12),
-                itemBuilder: (context, index) {
-                  final p = _posts[index];
-                  return PostCard(post: p);
-                },
-              ),
-      ),
-    );
-  }
+  late Future<List<Post>> _postsFuture;
 
   @override
   void initState() {
     super.initState();
-    _loadPosts();
+    _fetchPosts();
   }
 
-  Future<void> _loadPosts({bool refresh = false}) async {
-    if (_loading) return;
-    setState(() => _loading = true);
-    try {
-      if (refresh) _posts.clear();
-      final list = await _repo.getPosts(page: 1, limit: 20);
-      setState(() {
-        _posts.addAll(list);
-      });
-    } catch (e) {
-      // ignore
-    } finally {
-      setState(() => _loading = false);
-    }
+  void _fetchPosts() {
+    _postsFuture = _repo.getPosts(page: 1, limit: 20);
+  }
+
+  Future<void> _refresh() async {
+    setState(() {
+      _fetchPosts();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Bài viết'),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () async {
+          final result = await Navigator.pushNamed(context, RouteName.createPost);
+          if (result == true && mounted) {
+            _refresh();
+          }
+        },
+        child: const Icon(Icons.add),
+      ),
+      body: RefreshIndicator(
+        onRefresh: _refresh,
+        child: FutureBuilder<List<Post>>(
+          future: _postsFuture,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            if (snapshot.hasError) {
+              return Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.error_outline, color: Colors.red, size: 48),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Lỗi tải bài viết',
+                        style: Theme.of(context).textTheme.titleLarge,
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        snapshot.error.toString(),
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                      const SizedBox(height: 16),
+                      ElevatedButton.icon(
+                        onPressed: _refresh,
+                        icon: const Icon(Icons.refresh),
+                        label: const Text('Thử lại'),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }
+
+            if (!snapshot.hasData || snapshot.data!.isEmpty) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.article_outlined, size: 56, color: Colors.grey),
+                    const SizedBox(height: 12),
+                    Text('Chưa có bài viết nào', style: Theme.of(context).textTheme.titleMedium),
+                  ],
+                ),
+              );
+            }
+
+            final posts = snapshot.data!;
+            return ListView.builder(
+              padding: const EdgeInsets.only(bottom: 80), // Padding for FAB
+              itemCount: posts.length,
+              itemBuilder: (context, index) {
+                return PostItem(post: posts[index]);
+              },
+            );
+          },
+        ),
+      ),
+    );
   }
 }

@@ -1,132 +1,147 @@
-import 'package:devlearn/screens/post/post_screen.dart';
+import 'package:devlearn/data/models/post.dart';
 import 'package:flutter/material.dart';
-import '../../data/models/post.dart';
-import '../../core/utils/helpers.dart';
 
-class PostCard extends StatefulWidget {
+class PostItem extends StatefulWidget {
   final Post post;
-  const PostCard({super.key, required this.post});
+  const PostItem({super.key, required this.post});
 
   @override
-  State<PostCard> createState() => _PostCardState();
+  State<PostItem> createState() => _PostItemState();
 }
 
-class _PostCardState extends State<PostCard> {
+class _PostItemState extends State<PostItem> {
   late bool isLiked;
+  late int localLikeCount;
 
   @override
   void initState() {
     super.initState();
     isLiked = widget.post.isLiked;
+    localLikeCount = widget.post.likeCount;
+  }
+
+  void _toggleLike() {
+    setState(() {
+      isLiked = !isLiked;
+      if (isLiked) {
+        localLikeCount++;
+      } else {
+        localLikeCount--;
+      }
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    final timeago = timeAgo(widget.post.createdAt);
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final timeAgo = _formatTimeAgo(widget.post.createdAt);
 
-    return InkWell(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => PostScreen(post: widget.post),
-          ),
-        );
-      },
-      child: Card(
-        margin: const EdgeInsets.only(bottom: 12),
-        color: const Color(0xFF1C1C1E),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    return Card(
+      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () {
+          // Navigator.push(context, MaterialPageRoute(builder: (context) => PostScreen(post: widget.post)));
+        },
         child: Padding(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Avatar + tên + thời gian
+              // Author and Time ago
               Row(
                 children: [
-                  const CircleAvatar(
-                    radius: 14,
-                    backgroundColor: Colors.grey,
-                    child: Icon(Icons.person, size: 14, color: Colors.white),
+                  CircleAvatar(
+                    radius: 16,
+                    backgroundColor: colorScheme.primary.withOpacity(0.1),
+                    child: Text(
+                      widget.post.authorName?.isNotEmpty == true
+                          ? widget.post.authorName![0].toUpperCase()
+                          : 'A',
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: colorScheme.primary),
+                    ),
                   ),
                   const SizedBox(width: 8),
-                  Text(
-                    (widget.post.authorName == null) ? "Ẩn danh" : widget.post.authorName!,
-                    style: const TextStyle(color: Colors.white70, fontSize: 13),
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    '· $timeago',
-                    style: const TextStyle(color: Colors.white38, fontSize: 12),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        widget.post.authorName ?? 'Anonymous',
+                        style: theme.textTheme.labelLarge,
+                      ),
+                      Text(
+                        timeAgo,
+                        style: theme.textTheme.bodySmall
+                            ?.copyWith(color: colorScheme.onSurface.withOpacity(0.6)),
+                      ),
+                    ],
                   ),
                 ],
               ),
-      
-              const SizedBox(height: 8),
-      
-              // Tiêu đề
+              const SizedBox(height: 12),
+
+              // Title and Content
               Text(
                 widget.post.title,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                ),
+                style: theme.textTheme.titleMedium
+                    ?.copyWith(fontWeight: FontWeight.bold),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
-      
-              const SizedBox(height: 4),
-      
-              // Nội dung
-              Text(
-                widget.post.content.length > 100
-                    ? '${widget.post.content.substring(0, 100)}...'
-                    : widget.post.content,
-                style: const TextStyle(color: Colors.white70, fontSize: 13),
-              ),
-      
               const SizedBox(height: 8),
-      
-              // Like - View - Comment
-              Row(
-                children: [
-                  InkWell(
-                    borderRadius: BorderRadius.circular(30),
-                    onTap: () {
-                      setState(() => isLiked = !isLiked);
-                    },
-                    child: Container(
-                      padding:
-                          const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        border: Border.all(
-                            color: isLiked ? Colors.amberAccent : Colors.white30),
-                        borderRadius: BorderRadius.circular(30),
-                        color: isLiked
-                            ? Colors.amberAccent.withOpacity(0.15)
-                            : Colors.transparent,
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            isLiked ? Icons.thumb_up : Icons.thumb_up_outlined,
-                            color: isLiked ? Colors.amber : Colors.white54,
-                            size: 18,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            '${widget.post.likeCount + (isLiked ? 1 : 0) - (widget.post.isLiked ? 1 : 0)}',
-                            style: const TextStyle(
-                                color: Colors.white70, fontSize: 13),
-                          ),
-                        ],
-                      ),
-                    ),
+              Text(
+                widget.post.content,
+                style: theme.textTheme.bodyMedium
+                    ?.copyWith(color: colorScheme.onSurface.withOpacity(0.8)),
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 12),
+
+              // Tags
+              if (widget.post.tags?.isNotEmpty == true)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 12.0),
+                  child: Wrap(
+                    spacing: 6.0,
+                    runSpacing: 4.0,
+                    children: widget.post.tags!
+                        .map((tag) => Chip(
+                              label: Text(tag),
+                              padding: EdgeInsets.zero,
+                              labelStyle: theme.chipTheme.labelStyle?.copyWith(fontSize: 10),
+                              backgroundColor: theme.chipTheme.backgroundColor,
+                              side: BorderSide.none,
+                            ))
+                        .toList(),
                   ),
-                  const SizedBox(width: 16),
-                  _iconStat(Icons.remove_red_eye_outlined, widget.post.views),
-                  const SizedBox(width: 16),
-                  _iconStat(Icons.comment_outlined, widget.post.commentCount),
+                ),
+              
+              const Divider(),
+              
+              // Stats and Like button
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      _iconStat(theme, Icons.thumb_up_alt_outlined, localLikeCount),
+                      const SizedBox(width: 20),
+                      _iconStat(theme, Icons.comment_outlined, widget.post.commentCount),
+                      const SizedBox(width: 20),
+                      _iconStat(theme, Icons.remove_red_eye_outlined, widget.post.views),
+                    ],
+                  ),
+                  IconButton(
+                    icon: Icon(
+                      isLiked ? Icons.favorite : Icons.favorite_border,
+                      color: isLiked ? Colors.redAccent : colorScheme.onSurface.withOpacity(0.6),
+                    ),
+                    onPressed: _toggleLike,
+                  )
                 ],
               ),
             ],
@@ -136,18 +151,36 @@ class _PostCardState extends State<PostCard> {
     );
   }
 
-  Widget _iconStat(IconData icon, int count) {
+  Widget _iconStat(ThemeData theme, IconData icon, int count) {
     return Row(
       children: [
-        Icon(icon, color: Colors.white38, size: 16),
-        const SizedBox(width: 4),
+        Icon(icon,
+            color: theme.colorScheme.onSurface.withOpacity(0.6), size: 16),
+        const SizedBox(width: 6),
         Text(
           '$count',
-          style: const TextStyle(color: Colors.white54, fontSize: 13),
+          style: theme.textTheme.bodyMedium
+              ?.copyWith(color: theme.colorScheme.onSurface.withOpacity(0.8)),
         ),
       ],
     );
   }
 
-
+  String _formatTimeAgo(DateTime dateTime) {
+    final difference = DateTime.now().difference(dateTime);
+    if (difference.inDays > 365) {
+      return '${(difference.inDays / 365).floor()}y ago';
+    } else if (difference.inDays > 30) {
+      return '${(difference.inDays / 30).floor()}mo ago';
+    } else if (difference.inDays > 0) {
+      return '${difference.inDays}d ago';
+    } else if (difference.inHours > 0) {
+      return '${difference.inHours}h ago';
+    } else if (difference.inMinutes > 0) {
+      return '${difference.inMinutes}m ago';
+    } else {
+      return 'Just now';
+    }
+  }
 }
+

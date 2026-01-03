@@ -23,113 +23,90 @@ class PostScreen extends StatelessWidget {
     final timeago = timeAgo(post.createdAt);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0D0D0D),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF1C1C1E),
-        title: Text(post.title, style: const TextStyle(color: Colors.white)),
-        iconTheme: const IconThemeData(color: Colors.white),
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
+        title: Text(post.title, style: Theme.of(context).textTheme.titleLarge),
+        iconTheme: Theme.of(context).iconTheme,
       ),
-      body: Stack(
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 70),
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Hàng thông tin
-                  Row(
-                    children: [
-                      const CircleAvatar(
-                        radius: 14,
-                        backgroundColor: Colors.grey,
-                        child: Icon(Icons.person, size: 14, color: Colors.white),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        post.authorName ?? "Ẩn danh",
-                        style: const TextStyle(color: Colors.white70, fontSize: 14),
-                      ),
-                      const SizedBox(width: 6),
-                      const Icon(Icons.remove_red_eye, color: Colors.white38, size: 14),
-                      const SizedBox(width: 4),
-                      Text(
-                        '${post.views}',
-                        style: const TextStyle(color: Colors.white38, fontSize: 12),
-                      ),
-                      const SizedBox(width: 6),
-                      const Icon(Icons.access_time, color: Colors.white38, size: 14),
-                      const SizedBox(width: 4),
-                      Text(
-                        timeago,
-                        style: const TextStyle(color: Colors.white38, fontSize: 12),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-
-                  // Tag
-                  if (post.tags != null && post.tags!.isNotEmpty)
-                    Wrap(
-                      spacing: 8,
-                      children: post.tags!
-                          .map((tag) => Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: Colors.grey.shade800,
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                                child: Text(
-                                  tag,
-                                  style: const TextStyle(color: Colors.white70, fontSize: 12),
-                                ),
-                              ))
-                          .toList(),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 90),
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Card(
+                  color: Theme.of(context).cardColor,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            const CircleAvatar(radius: 16, backgroundColor: Colors.grey, child: Icon(Icons.person, size: 16, color: Colors.white)),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(post.authorName ?? 'Ẩn danh', style: Theme.of(context).textTheme.bodyMedium),
+                                  const SizedBox(height: 2),
+                                  Text('$timeago • ${post.views} lượt xem', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey)),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        if (post.tags != null && post.tags!.isNotEmpty)
+                          Wrap(
+                            spacing: 8,
+                            children: post.tags!
+                                .map((tag) => Chip(label: Text(tag, style: Theme.of(context).textTheme.bodySmall)))
+                                .toList(),
+                          ),
+                        const SizedBox(height: 10),
+                        Text(post.title, style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold)),
+                        const SizedBox(height: 10),
+                        Text(post.content, style: Theme.of(context).textTheme.bodyLarge?.copyWith(height: 1.6)),
+                      ],
                     ),
-                  const SizedBox(height: 12),
-
-                  // Tiêu đề
-                  Text(
-                    post.title,
-                    style: const TextStyle(
-                        color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
                   ),
-                  const SizedBox(height: 12),
-
-                  // Nội dung
-                  Text(
-                    post.content,
-                    style: const TextStyle(color: Colors.white70, fontSize: 15, height: 1.5),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
-
-          // Thanh dưới cố định
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-              decoration: const BoxDecoration(
-                color: Color(0xFF1C1C1E),
-                border: Border(top: BorderSide(color: Colors.white10)),
+        ),
+      ),
+      bottomSheet: BottomAppBar(
+        color: Theme.of(context).appBarTheme.backgroundColor,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              TextButton.icon(
+                onPressed: () {},
+                icon: const Icon(Icons.thumb_up_alt_outlined),
+                label: Text('${post.likeCount}'),
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  _bottomButton(Icons.arrow_upward, post.likeCount),
-                  _bottomButton(Icons.comment_outlined, post.commentCount, onTap: () {
-                    _showComments(context);
-                  }),
-                  _bottomButton(Icons.share_outlined, 0),
-                ],
+              TextButton.icon(
+                onPressed: () => _showComments(context),
+                icon: const Icon(Icons.comment_outlined),
+                label: Text('${post.commentCount}'),
               ),
-            ),
+              TextButton.icon(
+                onPressed: () {},
+                icon: const Icon(Icons.share_outlined),
+                label: const Text('Chia sẻ'),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

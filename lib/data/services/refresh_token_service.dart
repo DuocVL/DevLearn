@@ -3,16 +3,15 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class RefreshTokenService {
 
   String get baseUrl {
-    if (kIsWeb) return 'http://localhost:4000/refresh';
-    try {
-      if (Platform.isAndroid) return 'http://10.0.2.2:4000/refresh';
-      if (Platform.isIOS) return 'http://localhost:4000/refresh';
-    } catch (_) {}
-    return 'http://localhost:4000/refresh';
+    final env = dotenv.env['BACKEND_URL'];
+    if (env != null && env.isNotEmpty) return '${env.replaceAll(RegExp(r'/$'), '')}/refresh';
+    // Default to Android emulator host when BACKEND_URL not provided
+    return 'http://10.0.2.2:4000/refresh';
   }
   final _storage = const FlutterSecureStorage();
 

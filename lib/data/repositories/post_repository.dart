@@ -1,52 +1,85 @@
 import 'dart:convert';
-import 'refresh_token_repository.dart';
-import '../services/post_service.dart';
-import '../models/post.dart';
+import 'package:devlearn/data/models/post.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:http/http.dart' as http;
 
 class PostRepository {
+  final _storage = const FlutterSecureStorage();
 
-  final _postService = PostService();
-  final _refreshTokenRepository = RefreshTokenRepository();
-
-  Future<Post?> addPost(String title, String content, List<String> tags, bool anonymous) async {
-
-    final res = await _postService.addPost(title, content, tags, anonymous);
-
-    if(res.statusCode == 201){
-      final json = jsonDecode(res.body);
-      return Post.fromJson(json);
-    } else if(res.statusCode == 401){
-      final statusRefresh = await _refreshTokenRepository.refreshToken();
-
-      if(statusRefresh){
-        final res2 = await _postService.addPost(title, content, tags, anonymous);
-        final data = jsonDecode(res2.body);
-        return Post.fromJson(data);
-      }
+  Future<List<Post>> getPosts({int page = 1, int limit = 20}) async {
+    final baseUrl = dotenv.env['BACKEND_URL'];
+    if (baseUrl == null) {
+      throw Exception('BACKEND_URL not found in .env file');
     }
-    return null;
+
+    final token = await _storage.read(key: 'accessToken');
+    if (token == null) {
+      throw Exception('Access token not found');
+    }
+
+    final uri = Uri.parse('$baseUrl/posts').replace(
+      queryParameters: {
+        'page': '$page',
+        'limit': '$limit',
+      },
+    );
+
+    final response = await http.get(
+      uri,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      // The backend returns { data: [...], pagination: {...} }
+      final body = json.decode(response.body);
+      final List<dynamic> postsJson = body['data'];
+      return postsJson
+          .map((json) => Post.fromJson(json))
+          .toList();
+    } else {
+      final body = json.decode(response.body);
+      final errorMessage = body['message'] ?? 'Failed to load posts';
+      throw Exception(errorMessage);
+    }
   }
 
-  Future<List<Post>> getPosts({int page = 1, int limit = 20, String? tag}) async {
-    final res = await _postService.getPosts(page: page, limit: limit, tag: tag);
-    if (res.statusCode == 200) {
-      final json = jsonDecode(res.body);
-      final data = json['data'] as List<dynamic>? ?? [];
-      return data.map((e) => Post.fromJson(e)).toList();
-    } else if (res.statusCode == 401) {
-      final ok = await _refreshTokenRepository.refreshToken();
-      if (ok) {
-        final res2 = await _postService.getPosts(page: page, limit: limit, tag: tag);
-        if (res2.statusCode == 200) {
-          final json = jsonDecode(res2.body);
-          final data = json['data'] as List<dynamic>? ?? [];
-          return data.map((e) => Post.fromJson(e)).toList();
-        }
-      }
+  Future<Post> addPost(String title, String content, List<String> tags, bool anonymous) async {
+    final baseUrl = dotenv.env['BACKEND_URL'];
+    if (baseUrl == null) {
+      throw Exception('BACKEND_URL not found in .env file');
     }
-    return [];
-  }
 
-  
-  
+    final token = await _storage.read(key: 'accessToken');
+    if (token == null) {
+      throw Exception('Access token not found');
+    }
+
+    final response = await http.post(
+      Uri.parse('$baseUrl/posts'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: json.encode({
+        'title': title,
+        'content': content,
+        'tags': tags,
+        'anonymous': anonymous,
+      }),
+    );
+
+    if (response.statusCode == 201) {
+      final body = json.decode(response.body);
+      return Post.fromJson(body['post']);
+    } else {
+      final body = json.decode(response.body);
+      final errorMessage = body['message'] ?? 'Failed to create post';
+      throw Exception(errorMessage);
+    }
+  }
 }
+

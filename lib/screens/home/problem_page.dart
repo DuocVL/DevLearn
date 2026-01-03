@@ -1,9 +1,8 @@
-import 'package:devlearn/screens/widgets/filter_widget.dart';
+import 'package:devlearn/data/models/problem_summary.dart';
+import 'package:devlearn/data/repositories/problem_repository.dart';
 import 'package:devlearn/screens/widgets/problem_item.dart';
 import 'package:devlearn/screens/widgets/search_widget.dart';
-import 'package:devlearn/data/models/problem_summary.dart';
 import 'package:flutter/material.dart';
-import '../../data/repositories/problem_repository.dart';
 
 class ProblemPage extends StatefulWidget {
   const ProblemPage({super.key});
@@ -13,22 +12,19 @@ class ProblemPage extends StatefulWidget {
 }
 
 class _ProblemPageState extends State<ProblemPage> {
-
-  final TextEditingController _searchController = TextEditingController();
-  String _selectedFilter = "All";
-
-  final List<String> filters = [
-    "All", "Easy", "Medium", "Hard", "Solved", "Revision"
-  ];
-
-  final ScrollController _scrollController = ScrollController();
+  final _repo = ProblemRepository();
+  final _scrollController = ScrollController();
+  final _searchController = TextEditingController();
 
   final List<ProblemSummary> _problems = [];
-  bool _isLoading = false;
+  final List<String> _filters = ["All", "Easy", "Medium", "Hard"];
+  
+  String _selectedFilter = "All";
+  bool _isInitialLoading = true;
+  bool _isMoreLoading = false;
   bool _hasMore = true;
   int _page = 1;
-
-  final _repo = ProblemRepository();
+  String? _error;
 
   @override
   void initState() {
@@ -37,109 +33,171 @@ class _ProblemPageState extends State<ProblemPage> {
     _scrollController.addListener(_onScroll);
   }
 
-   Future<void> _fetchProblems() async {
-    if (_isLoading || !_hasMore) return;
-    setState(() => _isLoading = true);
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    _searchController.dispose();
+    super.dispose();
+  }
 
-    final list = await _repo.getProblems(page: _page, limit: 20, difficulty: _selectedFilter == 'All' ? null : _selectedFilter);
-
+  Future<void> _fetchProblems({bool isRefreshing = false}) async {
+    if (_isMoreLoading) return;
+    
     setState(() {
-      _problems.addAll(list);
-      _isLoading = false;
-      _page++;
-      if (list.length < 20) _hasMore = false;
+      _isMoreLoading = true;
+      if (isRefreshing) {
+        _isInitialLoading = true;
+      }
     });
+
+    try {
+      final list = await _repo.getProblems(
+        page: _page,
+        limit: 20,
+        difficulty: _selectedFilter,
+      );
+
+      if (mounted) {
+        setState(() {
+          if (list.length < 20) {
+            _hasMore = false;
+          }
+          _problems.addAll(list);
+          _page++;
+          _error = null;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _error = e.toString();
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Lỗi: ${e.toString()}'), backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isInitialLoading = false;
+          _isMoreLoading = false;
+        });
+      }
+    }
   }
 
   void _onScroll() {
-    if (_scrollController.position.pixels >=
-        _scrollController.position.maxScrollExtent - 100) {
+    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200 && _hasMore) {
       _fetchProblems();
     }
   }
 
-  @override
-  void dispose() {
-    _scrollController.dispose();
-    super.dispose();
+  Future<void> _onFilterChanged(String newFilter) async {
+    setState(() {
+      _selectedFilter = newFilter;
+      _problems.clear();
+      _page = 1;
+      _hasMore = true;
+      _error = null;
+      _isInitialLoading = true;
+    });
+    await _fetchProblems(isRefreshing: true);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0D0D0F),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0D0D0F),
+        title: SearchWidget(controller: _searchController),
         elevation: 0,
-        title: SearchWidget(
-          controller: _searchController,
-        ),
-        actions: [
-          IconButton(
-            onPressed: () => _openFilter(context), 
-            icon: const Icon(Icons.filter_list, color: Colors.grey,)
-          ),
+      ),
+      body: Column(
+        children: [
+          _buildFilterBar(),
+          Expanded(child: _buildBody()),
         ],
       ),
-      body: ListView.builder(
+    );
+  }
+
+  Widget _buildBody() {
+    if (_isInitialLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_error != null && _problems.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.cloud_off, size: 48, color: Colors.grey),
+              const SizedBox(height: 16),
+              const Text('Không thể tải dữ liệu', style: TextStyle(fontSize: 18)),
+              const SizedBox(height: 8),
+              Text(_error!, style: const TextStyle(color: Colors.grey), textAlign: TextAlign.center),
+              const SizedBox(height: 16),
+              ElevatedButton(onPressed: () => _onFilterChanged(_selectedFilter), child: const Text('Thử lại')),
+            ],
+          ),
+        ),
+      );
+    }
+    
+    if (_problems.isEmpty) {
+       return const Center(child: Text('Không tìm thấy bài tập nào.'));
+    }
+
+    return RefreshIndicator(
+      onRefresh: () => _onFilterChanged(_selectedFilter),
+      child: ListView.builder(
         controller: _scrollController,
-        itemCount: _problems.length + (_isLoading ? 1 : 0),
+        itemCount: _problems.length + (_isMoreLoading ? 1 : 0),
+        padding: const EdgeInsets.symmetric(vertical: 8),
         itemBuilder: (context, index) {
-          if (index < _problems.length) {
-            return ProblemItem(problemSummary: _problems[index]);
-          } else {
-            return const Padding(
-              padding: EdgeInsets.all(16.0),
-              child: Center(
-                child: CircularProgressIndicator(color: Colors.blueAccent),
-              ),
-            );
+          if (index == _problems.length) {
+            return const Center(child: Padding(padding: EdgeInsets.all(16.0), child: CircularProgressIndicator()));
           }
+          return ProblemItem(problemSummary: _problems[index]);
         },
       ),
     );
   }
 
   Widget _buildFilterBar() {
-    return SizedBox(
-      height: 36,
-      child: ListView.separated(
-        padding: const EdgeInsets.symmetric(horizontal: 12),
-        scrollDirection: Axis.horizontal,
-        itemCount: filters.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 8),
-        itemBuilder: (context, index) {
-          final filter = filters[index];
-          final isSelected = _selectedFilter == filter;
-          return GestureDetector(
-            onTap: () => setState(() => _selectedFilter = filter),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-              decoration: BoxDecoration(
-                color: isSelected ? Colors.blueAccent : const Color(0xFF1C1C2E),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Text(
-                filter,
-                style: TextStyle(
-                  color: isSelected ? Colors.white : Colors.grey[400],
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
-          );
-        },
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12.0),
+      decoration: BoxDecoration(
+        color: theme.appBarTheme.backgroundColor,
+        border: Border(bottom: BorderSide(color: theme.dividerColor))
       ),
-    );
-  }
-  void _openFilter(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: const Color(0xFF2C2C2E),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      child: SizedBox(
+        height: 32,
+        child: ListView.separated(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          scrollDirection: Axis.horizontal,
+          itemCount: _filters.length,
+          separatorBuilder: (_, __) => const SizedBox(width: 8),
+          itemBuilder: (context, index) {
+            final filter = _filters[index];
+            final isSelected = _selectedFilter == filter;
+            return ChoiceChip(
+              label: Text(filter),
+              selected: isSelected,
+              onSelected: (_) => _onFilterChanged(filter),
+              selectedColor: theme.colorScheme.primary,
+              labelStyle: TextStyle(
+                color: isSelected ? theme.colorScheme.onPrimary : theme.colorScheme.onSurface,
+              ),
+              backgroundColor: theme.colorScheme.surface,
+              side: isSelected ? BorderSide.none : BorderSide(color: theme.dividerColor),
+            );
+          },
+        ),
       ),
-      builder: (_) => const FilterBottomSheet(),
     );
   }
 }

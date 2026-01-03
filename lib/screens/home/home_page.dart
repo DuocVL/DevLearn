@@ -1,10 +1,13 @@
+import 'package:devlearn/data/models/post.dart';
+import 'package:devlearn/data/models/problem_summary.dart';
+import 'package:devlearn/data/models/tutorial_summary.dart';
+import 'package:devlearn/data/repositories/post_repository.dart';
+import 'package:devlearn/data/repositories/problem_repository.dart';
+import 'package:devlearn/data/repositories/tutorial_repository.dart';
+import 'package:devlearn/screens/widgets/post_item.dart';
+import 'package:devlearn/screens/widgets/problem_item.dart';
+import 'package:devlearn/screens/widgets/tutorial_card.dart';
 import 'package:flutter/material.dart';
-import '../../data/models/tutorial_summary.dart';
-import '../../data/models/problem_summary.dart';
-import '../../data/models/post.dart';
-import '../widgets/tutorial_card.dart';
-import '../widgets/problem_item.dart';
-import '../widgets/post_item.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -14,76 +17,50 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  final TextEditingController searchController = TextEditingController();
+  late final TutorialRepository _tutorialRepository;
+  late final ProblemRepository _problemRepository;
+  late final PostRepository _postRepository;
 
-  // --- Dữ liệu giả để demo ---
-  final List<TutorialSummary> tutorials = [
-    TutorialSummary(id: '1', title: 'Flutter Basics'),
-    TutorialSummary(id: '2', title: 'State Management'),
-    TutorialSummary(id: '3', title: 'Firebase Integration'),
-    TutorialSummary(id: '4', title: 'REST API in Dart'),
-    TutorialSummary(id: '5', title: 'Animations in Flutter'),
-  ];
+  late Future<List<TutorialSummary>> _tutorialsFuture;
+  late Future<List<ProblemSummary>> _problemsFuture;
+  late Future<List<Post>> _postsFuture;
 
-  final List<ProblemSummary> problems = [
-    ProblemSummary(id: '1', title: 'Two Sum', difficulty: 'Easy', acceptance: 47.5, solved: true, saved: true),
-    ProblemSummary(id: '2', title: 'Binary Tree Inorder Traversal', difficulty: 'Medium', acceptance: 38.2, solved: false, saved: false),
-    ProblemSummary(id: '3', title: 'Longest Substring Without Repeating', difficulty: 'Medium', acceptance: 31.7, solved: false, saved: true),
-    ProblemSummary(id: '4', title: 'Median of Two Sorted Arrays', difficulty: 'Hard', acceptance: 28.6, solved: false, saved: false),
-    ProblemSummary(id: '5', title: 'Merge Sorted Lists', difficulty: 'Easy', acceptance: 56.1, solved: true, saved: false),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _tutorialRepository = TutorialRepository();
+    _problemRepository = ProblemRepository();
+    _postRepository = PostRepository();
 
-  final List<Post> posts = [
-    Post(
-      id: '1',
-      title: 'Follow-up on Offer Rollout Timeline After AA Round',
-      content: 'I participated in the SSE hiring drive and my AA round was conducted on 3rd November...',
-      authorId: null,
-      authorName: null,
-      tags: [],
-      likeCount: 1,
-      commentCount: 0,
-      views: 2,
-      createdAt: DateTime.now().subtract(const Duration(minutes: 2)),
-      updatedAt: DateTime.now(),
-      isLiked: true,
-    ),
-    Post(
-      id: '2',
-      title: 'Tips for Preparing Flutter Interview',
-      content: 'Here are some key topics to prepare for Flutter developer interviews...',
-      authorId: 'user1',
-      authorName: 'DevGuy',
-      tags: ['Flutter', 'Interview'],
-      likeCount: 5,
-      commentCount: 3,
-      views: 25,
-      createdAt: DateTime.now().subtract(const Duration(hours: 3)),
-      updatedAt: DateTime.now(),
-    ),
-  ];
+    _loadData();
+  }
 
-  // ----------------------------
+  void _loadData() {
+    _tutorialsFuture = _tutorialRepository.getTutorials();
+    _problemsFuture = _problemRepository.getProblems();
+    _postsFuture = _postRepository.getPosts();
+  }
+
+  Future<void> _refresh() async {
+    setState(() {
+      _loadData();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
-      backgroundColor: const Color(0xFF0D0D0D),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0D0D0D),
-        elevation: 0,
-        title: const Text(
+        title: Text(
           'DevLearn',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 20,
-            color: Colors.white,
-          ),
+          style: theme.appBarTheme.titleTextStyle,
         ),
         centerTitle: false,
         actions: [
           IconButton(
-            icon: const Icon(Icons.notifications_none_outlined, color: Colors.white),
+            icon: const Icon(Icons.notifications_none_outlined),
             onPressed: () {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text("Chưa có thông báo mới.")),
@@ -93,51 +70,124 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
-
-      // ---------- BODY ----------
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 🔹 Tutorials
-            const Text(
-              "Bài học nổi bật",
-              style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 12),
-            SizedBox(
-              height: 130,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                itemCount: tutorials.length,
-                separatorBuilder: (_, __) => const SizedBox(width: 12),
-                itemBuilder: (context, index) => TutorialCard(tutorial: tutorials[index]),
-              ),
-            ),
-
-            const SizedBox(height: 24),
-
-            // 🔹 Problems
-            const Text(
-              "Bài tập luyện tập",
-              style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 12),
-            ...problems.map((p) => ProblemItem(problemSummary: p)).toList(),
-
-            const SizedBox(height: 24),
-
-            // 🔹 Posts
-            const Text(
-              "Bài viết mới",
-              style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 12),
-            ...posts.map((p) => PostCard(post: p)).toList(),
-          ],
+      body: RefreshIndicator(
+        onRefresh: _refresh,
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 16),
+              _buildSectionTitle(theme, "Khóa học nổi bật"),
+              _buildTutorialsSection(),
+              const SizedBox(height: 24),
+              _buildSectionTitle(theme, "Thử thách lập trình"),
+              _buildProblemsSection(),
+              const SizedBox(height: 24),
+              _buildSectionTitle(theme, "Bài viết mới"),
+              _buildPostsSection(),
+              const SizedBox(height: 24),
+            ],
+          ),
         ),
       ),
     );
   }
+
+  Padding _buildSectionTitle(ThemeData theme, String title) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      child: Text(
+        title,
+        style: theme.textTheme.titleLarge,
+      ),
+    );
+  }
+
+  Widget _buildTutorialsSection() {
+    return FutureBuilder<List<TutorialSummary>>(
+      future: _tutorialsFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const SizedBox(
+            height: 200,
+            child: Center(child: CircularProgressIndicator()),
+          );
+        }
+        if (snapshot.hasError) {
+          return SizedBox(
+            height: 200,
+            child: Center(child: Text('Lỗi tải khóa học: ${snapshot.error}')),
+          );
+        }
+        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return const SizedBox(
+            height: 200,
+            child: Center(child: Text('Không có khóa học nào.')),
+          );
+        }
+        final tutorials = snapshot.data!;
+        return SizedBox(
+          height: 200, // Adjusted height for the new card design
+          child: ListView.separated(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            scrollDirection: Axis.horizontal,
+            itemCount: tutorials.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 12),
+            itemBuilder: (context, index) {
+              return SizedBox(
+                width: 250, // Fixed width for horizontal cards
+                child: TutorialCard(tutorial: tutorials[index]),
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildProblemsSection() {
+    return FutureBuilder<List<ProblemSummary>>(
+      future: _problemsFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (snapshot.hasError) {
+          return Center(child: Text('Lỗi tải bài tập: ${snapshot.error}'));
+        }
+        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return const Center(child: Text('Không có bài tập nào.'));
+        }
+        final problems = snapshot.data!;
+        return Column(
+          children: problems
+              .take(5) // Show first 5 problems
+              .map((p) => ProblemItem(problemSummary: p))
+              .toList(),
+        );
+      },
+    );
+  }
+
+  Widget _buildPostsSection() {
+    return FutureBuilder<List<Post>>(
+      future: _postsFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (snapshot.hasError) {
+          return Center(child: Text('Lỗi tải bài viết: ${snapshot.error}'));
+        }
+        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return const Center(child: Text('Không có bài viết nào.'));
+        }
+        final posts = snapshot.data!;
+        return Column(
+          children: posts.map((p) => PostItem(post: p)).toList(),
+        );
+      },
+    );
+  }
 }
+

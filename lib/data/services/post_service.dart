@@ -3,20 +3,19 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class PostService {
-  PostService({String? baseUrl}) : _baseUrl = baseUrl ?? _defaultBaseUrl();
+  PostService({String? baseUrl}) : _baseUrl = baseUrl ?? _envOrDefault();
 
   final String _baseUrl;
   final _storage = const FlutterSecureStorage();
 
-  static String _defaultBaseUrl() {
-    if (kIsWeb) return 'http://localhost:4000/posts';
-    try {
-      if (Platform.isAndroid) return 'http://10.0.2.2:4000/posts';
-      if (Platform.isIOS) return 'http://localhost:4000/posts';
-    } catch (_) {}
-    return 'http://localhost:4000/posts';
+  static String _envOrDefault() {
+    final env = dotenv.env['BACKEND_URL'];
+    if (env != null && env.isNotEmpty) return '${env.replaceAll(RegExp(r'/$'), '')}/posts';
+    // Default to Android emulator host when BACKEND_URL not provided
+    return 'http://10.0.2.2:4000/posts';
   }
 
   Future<http.Response> addPost(String title, String content, List<String> tags, bool anonymous) async {
