@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:flutter_web_auth/flutter_web_auth.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../../routes/route_name.dart';
 import '../../data/repositories/auth_repository.dart';
 import '../../data/services/refresh_token_service.dart';
@@ -24,6 +27,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
 	final _storage = const FlutterSecureStorage();
 	final _refreshService = RefreshTokenService();
+  final GoogleSignIn _googleSignIn = GoogleSignIn();
 
 	@override
 	void initState() {
@@ -87,30 +91,63 @@ class _LoginScreenState extends State<LoginScreen> {
 	}
 
 	Future<void> _signInWithGoogle() async {
-		// TODO: Integrate `google_sign_in` package to obtain idToken, then call AuthRepository.loginWithGoogle(idToken)
 		await _setLoadingAndRun(() async {
-			// temporary: call repository with placeholder or simulate flow
-			final ok = await _authRepo.loginWithGoogle('idToken-placeholder');
-			if (ok) {
-				ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Đăng nhập bằng Google thành công')));
-				Navigator.of(context).pushReplacementNamed(RouteName.home);
-			} else {
-				ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Đăng nhập Google thất bại')));
-			}
+      try {
+        final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+        if (googleUser == null) {
+          // The user canceled the sign-in
+          return;
+        }
+        final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+        final String? idToken = googleAuth.idToken;
+
+        if (idToken == null) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Không thể lấy được idToken từ Google')));
+          return;
+        }
+
+        final ok = await _authRepo.loginWithGoogle(idToken);
+        if (ok) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Đăng nhập bằng Google thành công')));
+          Navigator.of(context).pushReplacementNamed(RouteName.home);
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Đăng nhập Google thất bại')));
+        }
+      } catch (error) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Lỗi khi đăng nhập bằng Google: $error')));
+      }
 		});
 	}
 
 	Future<void> _signInWithGithub() async {
-		// TODO: Implement GitHub OAuth flow (open webview to get code), then call AuthRepository.loginWithGithub(code)
-		await _setLoadingAndRun(() async {
-			final ok = await _authRepo.loginWithGithub('code-placeholder');
-			if (ok) {
-				ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Đăng nhập bằng GitHub thành công')));
-				Navigator.of(context).pushReplacementNamed(RouteName.home);
-			} else {
-				ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Đăng nhập GitHub thất bại')));
-			}
-		});
+    await _setLoadingAndRun(() async {
+      try {
+        final githubClientId = dotenv.env['GITHUB_CLIENT_ID'];
+        final url = Uri.https('github.com', '/login/oauth/authorize', {
+          'client_id': githubClientId,
+          'redirect_uri': 'devlearn://callback',
+          'scope': 'read:user',
+        });
+
+        final result = await FlutterWebAuth.authenticate(url: url.toString(), callbackUrlScheme: 'devlearn');
+        final code = Uri.parse(result).queryParameters['code'];
+
+        if (code == null) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Không thể lấy được mã từ GitHub')));
+          return;
+        }
+
+        final ok = await _authRepo.loginWithGithub(code);
+        if (ok) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Đăng nhập bằng GitHub thành công')));
+          Navigator.of(context).pushReplacementNamed(RouteName.home);
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Đăng nhập GitHub thất bại')));
+        }
+      } catch (error) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Lỗi khi đăng nhập bằng GitHub: $error')));
+      }
+    });
 	}
 
 	void _navigateToRegister() {
@@ -227,7 +264,7 @@ class _LoginScreenState extends State<LoginScreen> {
 														Align(
 															alignment: Alignment.centerRight,
 															child: TextButton(onPressed: _forgotPassword, child: const Text('Quên mật khẩu?')),
-																				
+														
 														),
 													],
 												),
@@ -304,4 +341,3 @@ class _PlaceholderScreen extends StatelessWidget {
 		);
 	}
 }
-
