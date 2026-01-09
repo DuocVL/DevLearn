@@ -3,10 +3,10 @@ import 'package:devlearn/features/register/register_screen.dart';
 import 'package:devlearn/routes/route_name.dart';
 import 'package:flutter/material.dart';
 import 'package:devlearn/l10n/app_localizations.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:flutter_web_auth/flutter_web_auth.dart';
-import 'package:google_sign_in/google_sign_in.dart';
-import 'package:sign_in_button/sign_in_button.dart';
+// import 'package:flutter_dotenv/flutter_dotenv.dart';
+// import 'package:flutter_web_auth/flutter_web_auth.dart';
+// import 'package:google_sign_in/google_sign_in.dart';
+// import 'package:sign_in_button/sign_in_button.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -42,10 +42,10 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  /*
   Future<void> _loginWithGoogle() async {
     setState(() => _isLoading = true);
     try {
-      // FIX: Khởi tạo GoogleSignIn cục bộ để giải quyết triệt để lỗi phân tích.
       final GoogleSignIn googleSignIn = GoogleSignIn();
       final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
       if (googleUser == null) {
@@ -140,6 +140,7 @@ class _LoginScreenState extends State<LoginScreen> {
       }
     }
   }
+  */
 
   @override
   Widget build(BuildContext context) {
@@ -189,6 +190,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   : ElevatedButton(onPressed: _login, child: Text(l10n.login)),
               const SizedBox(height: 20),
               const Divider(),
+              /*
               const SizedBox(height: 10),
               SignInButton(
                 Buttons.google,
@@ -199,6 +201,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 Buttons.gitHub,
                 onPressed: _isLoading ? null : () => _loginWithGithub(),
               ),
+              */
               const SizedBox(height: 20),
               TextButton(
                 onPressed: () {
