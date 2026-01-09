@@ -1,5 +1,6 @@
 import 'package:devlearn/data/api_client.dart';
 import 'package:devlearn/data/models/tutorial.dart';
+import 'package:devlearn/data/models/tutorial_summary.dart';
 import 'package:devlearn/main.dart';
 
 class TutorialService {

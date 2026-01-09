@@ -1,9 +1,9 @@
 import 'package:devlearn/widgets/bottom_nav_items.dart';
-import 'package:devlearn/features/home/pages/home_page.dart';
+import 'package:devlearn/features/home/home_page.dart';
 import 'package:devlearn/features/home/post_page.dart';
 import 'package:devlearn/features/home/problem_page.dart';
-import 'package:devlearn/features/home/pages/profile_page.dart';
-import 'package:devlearn/features/home/pages/tutorial_page.dart';
+import 'package:devlearn/features/home/profile_page.dart';
+import 'package:devlearn/features/home/tutorial_page.dart';
 import 'package:flutter/material.dart';
 
 // Home screen wrapper with adaptive AppBar and FAB suitable for a learning app

@@ -1,5 +1,6 @@
 import 'package:devlearn/data/models/lesson.dart';
 import 'package:devlearn/data/models/tutorial.dart';
+import 'package:devlearn/data/models/tutorial_summary.dart';
 import 'package:devlearn/features/forgot_password/forgot_password_screen.dart';
 import 'package:devlearn/features/forgot_password/reset_password_screen.dart';
 import 'package:devlearn/features/home/home_screen.dart';

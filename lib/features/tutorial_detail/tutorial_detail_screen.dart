@@ -1,4 +1,5 @@
 import 'package:devlearn/data/models/tutorial.dart';
+import 'package:devlearn/data/models/tutorial_summary.dart';
 import 'package:devlearn/data/services/tutorial_service.dart';
 import 'package:devlearn/features/lesson_detail/lesson_detail_screen.dart';
 import 'package:flutter/material.dart';

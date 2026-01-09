@@ -6,4 +6,6 @@ class RouteName {
   static const String resetPassword = '/reset-password';
   static const String tutorialDetail = '/tutorial-detail';
   static const String lessonDetail = '/lesson-detail';
+  static const String createPost = '/create-post';
+  static const String splash = '/splash';
 }

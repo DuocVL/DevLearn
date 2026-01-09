@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../features/auth/login_screen.dart';
-import '../features/auth/register_screen.dart';
-import '../features/auth/forgot_password_screen.dart';
+import '../features/login/login_screen.dart';
+import '../features/register/register_screen.dart';
+import '../features/forgot_password/forgot_password_screen.dart';
 import '../features/home/home_screen.dart';
 import '../features/post/create_post_screen.dart';
 import '../features/splash/splash_screen.dart';

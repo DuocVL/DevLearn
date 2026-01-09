@@ -23,8 +23,7 @@ class _TutorialPageState extends State<TutorialPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: FutureBuilder<List<TutorialSummary>>(
+    return FutureBuilder<List<TutorialSummary>>(
         future: _tutorialsFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -45,7 +44,6 @@ class _TutorialPageState extends State<TutorialPage> {
             },
           );
         },
-      ),
-    );
+      );
   }
 }

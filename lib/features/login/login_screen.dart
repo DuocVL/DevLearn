@@ -3,6 +3,9 @@ import 'package:devlearn/features/register/register_screen.dart';
 import 'package:devlearn/routes/route_name.dart';
 import 'package:flutter/material.dart';
 import 'package:devlearn/l10n/app_localizations.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_web_auth/flutter_web_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:sign_in_button/sign_in_button.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -39,17 +42,103 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  // Các phương thức loginWithGoogle và loginWithGithub sẽ được thêm vào sau
   Future<void> _loginWithGoogle() async {
-    // Logic để lấy idToken từ Google sẽ được thêm vào đây
-    // final success = await _authRepo.loginWithGoogle(idToken);
-    // Xử lý kết quả
+    setState(() => _isLoading = true);
+    try {
+      // FIX: Khởi tạo GoogleSignIn cục bộ để giải quyết triệt để lỗi phân tích.
+      final GoogleSignIn googleSignIn = GoogleSignIn();
+      final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
+      if (googleUser == null) {
+        setState(() => _isLoading = false);
+        return;
+      }
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final String? idToken = googleAuth.idToken;
+
+      if (idToken == null) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Google login failed: Could not retrieve ID token.')),
+        );
+        setState(() => _isLoading = false);
+        return;
+      }
+
+      final success = await _authRepo.loginWithGoogle(idToken);
+      if (success) {
+        if (!mounted) return;
+        Navigator.of(context).pushReplacementNamed(RouteName.home);
+      } else {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Google login failed. Please try again.')),
+        );
+      }
+    } catch (error) {
+      print(error);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('An error occurred during Google login.')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
   Future<void> _loginWithGithub() async {
-    // Logic để lấy code từ GitHub sẽ được thêm vào đây
-    // final success = await _authRepo.loginWithGithub(code);
-    // Xử lý kết quả
+    setState(() => _isLoading = true);
+    try {
+      final githubClientId = dotenv.env['GITHUB_CLIENT_ID'];
+      final githubRedirectUri = dotenv.env['GITHUB_REDIRECT_URI'];
+
+      if (githubClientId == null || githubRedirectUri == null) {
+        throw Exception('GitHub environment variables not set');
+      }
+
+      final authUrl = Uri.https('github.com', '/login/oauth/authorize', {
+        'client_id': githubClientId,
+        'redirect_uri': githubRedirectUri,
+        'scope': 'read:user',
+      });
+
+      final result = await FlutterWebAuth.authenticate(
+        url: authUrl.toString(),
+        callbackUrlScheme: 'devlearn',
+      );
+
+      final code = Uri.parse(result).queryParameters['code'];
+      if (code == null) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('GitHub login failed: No code received.')),
+        );
+        return;
+      }
+
+      final success = await _authRepo.loginWithGithub(code);
+
+      if (success) {
+        if (!mounted) return;
+        Navigator.of(context).pushReplacementNamed(RouteName.home);
+      } else {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('GitHub login failed. Please try again.')),
+        );
+      }
+    } catch (error) {
+      print(error);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('An error occurred during GitHub login: ${error.toString()}')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
   @override
@@ -103,12 +192,12 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: 10),
               SignInButton(
                 Buttons.google,
-                onPressed: _loginWithGoogle,
+                onPressed: _isLoading ? null : () => _loginWithGoogle(),
               ),
               const SizedBox(height: 10),
                SignInButton(
                 Buttons.gitHub,
-                onPressed: _loginWithGithub,
+                onPressed: _isLoading ? null : () => _loginWithGithub(),
               ),
               const SizedBox(height: 20),
               TextButton(

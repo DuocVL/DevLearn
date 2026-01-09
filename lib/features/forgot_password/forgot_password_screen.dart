@@ -1,5 +1,4 @@
 import 'package:devlearn/data/repositories/auth_repository.dart';
-import 'package:devlearn/l10n/app_localizations.dart';
 import 'package:devlearn/routes/route_name.dart';
 import 'package:flutter/material.dart';
 
@@ -35,9 +34,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.forgotPassword)),
+      appBar: AppBar(title: const Text('Forgot Password')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
@@ -46,7 +44,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             children: [
               TextFormField(
                 controller: _emailController,
-                decoration: InputDecoration(labelText: l10n.email),
+                decoration: const InputDecoration(labelText: 'Email'),
                 keyboardType: TextInputType.emailAddress,
                 validator: (value) {
                   if (value == null || value.isEmpty || !value.contains('@')) {
@@ -58,7 +56,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               const SizedBox(height: 20),
               _isLoading
                   ? const CircularProgressIndicator()
-                  : ElevatedButton(onPressed: _sendResetCode, child: Text(l10n.sendCode)),
+                  : ElevatedButton(onPressed: _sendResetCode, child: const Text('Send Code')),
             ],
           ),
         ),

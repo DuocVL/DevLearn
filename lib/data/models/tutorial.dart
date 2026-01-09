@@ -5,12 +5,18 @@ class Tutorial {
   final String title;
   final String description;
   final List<LessonSummary> lessons;
+  final List<String> tags;
+  final int totalViews;
+  final double progress;
 
   Tutorial({
     required this.id,
     required this.title,
     required this.description,
     required this.lessons,
+    required this.tags,
+    required this.totalViews,
+    required this.progress,
   });
 
   factory Tutorial.fromJson(Map<String, dynamic> json) {
@@ -21,20 +27,9 @@ class Tutorial {
       lessons: (json['lessons'] as List)
           .map((i) => LessonSummary.fromJson(i))
           .toList(),
-    );
-  }
-}
-
-class TutorialSummary {
-  final String id;
-  final String title;
-
-  TutorialSummary({required this.id, required this.title});
-
-  factory TutorialSummary.fromJson(Map<String, dynamic> json) {
-    return TutorialSummary(
-      id: json['_id'],
-      title: json['title'],
+      tags: List<String>.from(json['tags'] ?? []),
+      totalViews: json['totalViews'] ?? 0,
+      progress: (json['progress'] as num?)?.toDouble() ?? 0.0,
     );
   }
 }

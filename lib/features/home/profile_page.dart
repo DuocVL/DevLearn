@@ -2,7 +2,6 @@ import 'package:devlearn/data/models/user.dart';
 import 'package:devlearn/routes/route_name.dart';
 import 'package:flutter/material.dart';
 import 'package:devlearn/data/repositories/auth_repository.dart';
-import 'package:devlearn/l10n/app_localizations.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -22,20 +21,21 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> _logout() async {
-    final ok = await _authRepo.logout();
-    if (ok) {
+    try {
+      await _authRepo.logout();
       if (!mounted) return;
-      Navigator.of(context).pushReplacementNamed(RouteName.login);
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Logout failed')));
+      Navigator.of(context).pushNamedAndRemoveUntil(RouteName.login, (route) => false);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Logout failed. Please try again.')),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    return Scaffold(
-      body: FutureBuilder<User?>(
+    return FutureBuilder<User?>(
         future: _userFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -87,7 +87,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           ],
                         ),
                       ),
-                      ElevatedButton(onPressed: () {}, child: Text(l10n.edit))
+                      ElevatedButton(onPressed: () {}, child: const Text('Edit'))
                     ],
                   ),
                 ),
@@ -102,15 +102,15 @@ class _ProfilePageState extends State<ProfilePage> {
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceAround,
                             children: [
-                              _StatItem(label: l10n.solved, value: user.solvedCount.toString()),
-                              _StatItem(label: l10n.posts, value: user.postCount.toString()),
-                              _StatItem(label: l10n.followers, value: user.followerCount.toString()),
+                              _StatItem(label: 'Solved', value: user.solvedCount.toString()),
+                              _StatItem(label: 'Posts', value: user.postCount.toString()),
+                              _StatItem(label: 'Followers', value: user.followerCount.toString()),
                             ],
                           ),
                         ),
                       ),
                       const SizedBox(height: 12),
-                      ElevatedButton.icon(onPressed: _logout, icon: const Icon(Icons.logout), label: Text(l10n.logout)),
+                      ElevatedButton.icon(onPressed: _logout, icon: const Icon(Icons.logout), label: const Text('Logout')),
                     ],
                   ),
                 )
@@ -118,8 +118,7 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
           );
         },
-      ),
-    );
+      );
   }
 }
 
