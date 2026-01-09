@@ -18,15 +18,19 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   Future<void> _sendResetCode() async {
     if (_formKey.currentState!.validate()) {
       setState(() => _isLoading = true);
+      // SỬA LỖI: Gọi đúng tên phương thức là 'sendResetCode'
       final success = await _authRepo.sendResetCode(_emailController.text);
       setState(() => _isLoading = false);
       if (success) {
         if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Đã gửi mã đặt lại mật khẩu. Vui lòng kiểm tra email của bạn.')),
+        );
         Navigator.of(context).pushNamed(RouteName.resetPassword, arguments: _emailController.text);
       } else {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to send reset code. Please check your email.')),
+          const SnackBar(content: Text('Gửi mã thất bại. Vui lòng kiểm tra lại email của bạn.')),
         );
       }
     }
@@ -35,20 +39,22 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Forgot Password')),
+      appBar: AppBar(title: const Text('Quên Mật Khẩu')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
           child: Column(
             children: [
+              const Text('Nhập email của bạn để nhận mã đặt lại mật khẩu.'),
+              const SizedBox(height: 20),
               TextFormField(
                 controller: _emailController,
                 decoration: const InputDecoration(labelText: 'Email'),
                 keyboardType: TextInputType.emailAddress,
                 validator: (value) {
                   if (value == null || value.isEmpty || !value.contains('@')) {
-                    return 'Please enter a valid email';
+                    return 'Vui lòng nhập một email hợp lệ';
                   }
                   return null;
                 },
@@ -56,7 +62,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               const SizedBox(height: 20),
               _isLoading
                   ? const CircularProgressIndicator()
-                  : ElevatedButton(onPressed: _sendResetCode, child: const Text('Send Code')),
+                  : ElevatedButton(onPressed: _sendResetCode, child: const Text('Gửi Mã')),
             ],
           ),
         ),

@@ -2,11 +2,8 @@ import 'package:devlearn/data/repositories/auth_repository.dart';
 import 'package:devlearn/features/register/register_screen.dart';
 import 'package:devlearn/routes/route_name.dart';
 import 'package:flutter/material.dart';
-import 'package:devlearn/l10n/app_localizations.dart';
-// import 'package:flutter_dotenv/flutter_dotenv.dart';
-// import 'package:flutter_web_auth/flutter_web_auth.dart';
-// import 'package:google_sign_in/google_sign_in.dart';
-// import 'package:sign_in_button/sign_in_button.dart';
+
+// ĐÃ XÓA: import 'package:devlearn/l10n/app_localizations.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -36,117 +33,24 @@ class _LoginScreenState extends State<LoginScreen> {
       } else {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Login failed. Please check your credentials.')),
+          // SỬA: Chuyển sang tiếng Việt
+          const SnackBar(content: Text('Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.')),
         );
       }
     }
   }
 
   /*
-  Future<void> _loginWithGoogle() async {
-    setState(() => _isLoading = true);
-    try {
-      final GoogleSignIn googleSignIn = GoogleSignIn();
-      final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
-      if (googleUser == null) {
-        setState(() => _isLoading = false);
-        return;
-      }
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
-      final String? idToken = googleAuth.idToken;
-
-      if (idToken == null) {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Google login failed: Could not retrieve ID token.')),
-        );
-        setState(() => _isLoading = false);
-        return;
-      }
-
-      final success = await _authRepo.loginWithGoogle(idToken);
-      if (success) {
-        if (!mounted) return;
-        Navigator.of(context).pushReplacementNamed(RouteName.home);
-      } else {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Google login failed. Please try again.')),
-        );
-      }
-    } catch (error) {
-      print(error);
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('An error occurred during Google login.')),
-      );
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
-    }
-  }
-
-  Future<void> _loginWithGithub() async {
-    setState(() => _isLoading = true);
-    try {
-      final githubClientId = dotenv.env['GITHUB_CLIENT_ID'];
-      final githubRedirectUri = dotenv.env['GITHUB_REDIRECT_URI'];
-
-      if (githubClientId == null || githubRedirectUri == null) {
-        throw Exception('GitHub environment variables not set');
-      }
-
-      final authUrl = Uri.https('github.com', '/login/oauth/authorize', {
-        'client_id': githubClientId,
-        'redirect_uri': githubRedirectUri,
-        'scope': 'read:user',
-      });
-
-      final result = await FlutterWebAuth.authenticate(
-        url: authUrl.toString(),
-        callbackUrlScheme: 'devlearn',
-      );
-
-      final code = Uri.parse(result).queryParameters['code'];
-      if (code == null) {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('GitHub login failed: No code received.')),
-        );
-        return;
-      }
-
-      final success = await _authRepo.loginWithGithub(code);
-
-      if (success) {
-        if (!mounted) return;
-        Navigator.of(context).pushReplacementNamed(RouteName.home);
-      } else {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('GitHub login failed. Please try again.')),
-        );
-      }
-    } catch (error) {
-      print(error);
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('An error occurred during GitHub login: ${error.toString()}')),
-      );
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
-    }
-  }
+  Future<void> _loginWithGoogle() async { ... }
+  Future<void> _loginWithGithub() async { ... }
   */
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    // ĐÃ XÓA: final l10n = AppLocalizations.of(context)!;
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.login)),
+      // SỬA: Chuyển sang tiếng Việt
+      appBar: AppBar(title: const Text('Đăng nhập')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Form(
@@ -155,11 +59,13 @@ class _LoginScreenState extends State<LoginScreen> {
             children: [
               TextFormField(
                 controller: _emailController,
-                decoration: InputDecoration(labelText: l10n.email),
+                // SỬA: Chuyển sang tiếng Việt
+                decoration: const InputDecoration(labelText: 'Email'),
                 keyboardType: TextInputType.emailAddress,
                 validator: (value) {
                   if (value == null || value.isEmpty || !value.contains('@')) {
-                    return 'Please enter a valid email';
+                    // SỬA: Chuyển sang tiếng Việt
+                    return 'Vui lòng nhập một email hợp lệ';
                   }
                   return null;
                 },
@@ -167,11 +73,13 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: 16),
               TextFormField(
                 controller: _passwordController,
-                decoration: InputDecoration(labelText: l10n.password),
+                // SỬA: Chuyển sang tiếng Việt
+                decoration: const InputDecoration(labelText: 'Mật khẩu'),
                 obscureText: true,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please enter your password';
+                    // SỬA: Chuyển sang tiếng Việt
+                    return 'Vui lòng nhập mật khẩu của bạn';
                   }
                   return null;
                 },
@@ -181,33 +89,30 @@ class _LoginScreenState extends State<LoginScreen> {
                 alignment: Alignment.centerRight,
                 child: TextButton(
                   onPressed: () => Navigator.of(context).pushNamed(RouteName.forgotPassword),
-                  child: Text(l10n.forgotPassword),
+                  // SỬA: Chuyển sang tiếng Việt
+                  child: const Text('Quên mật khẩu?'),
                 ),
               ),
               const SizedBox(height: 20),
               _isLoading
                   ? const CircularProgressIndicator()
-                  : ElevatedButton(onPressed: _login, child: Text(l10n.login)),
+                  // SỬA: Chuyển sang tiếng Việt
+                  : ElevatedButton(onPressed: _login, child: const Text('Đăng nhập')),
               const SizedBox(height: 20),
               const Divider(),
               /*
               const SizedBox(height: 10),
-              SignInButton(
-                Buttons.google,
-                onPressed: _isLoading ? null : () => _loginWithGoogle(),
-              ),
+              SignInButton( ... ),
               const SizedBox(height: 10),
-               SignInButton(
-                Buttons.gitHub,
-                onPressed: _isLoading ? null : () => _loginWithGithub(),
-              ),
+               SignInButton( ... ),
               */
               const SizedBox(height: 20),
               TextButton(
                 onPressed: () {
                   Navigator.of(context).push(MaterialPageRoute(builder: (_) => const RegisterScreen()));
                 },
-                child: Text(l10n.register),
+                // SỬA: Chuyển sang tiếng Việt
+                child: const Text('Đăng ký'),
               ),
             ],
           ),

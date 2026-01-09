@@ -1,8 +1,8 @@
 import 'package:devlearn/data/api_client.dart';
+import 'package:devlearn/data/models/user.dart';
 import 'package:devlearn/data/repositories/auth_repository.dart';
 import 'package:devlearn/features/home/home_screen.dart';
 import 'package:devlearn/features/login/login_screen.dart';
-import 'package:devlearn/data/models/user.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';

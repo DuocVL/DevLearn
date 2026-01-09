@@ -1,7 +1,8 @@
 import 'package:devlearn/data/repositories/auth_repository.dart';
-import 'package:devlearn/l10n/app_localizations.dart';
 import 'package:devlearn/routes/route_name.dart';
 import 'package:flutter/material.dart';
+
+// ĐÃ XÓA: import 'package:devlearn/l10n/app_localizations.dart';
 
 class ResetPasswordScreen extends StatefulWidget {
   final String email;
@@ -30,13 +31,15 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
       if (success) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Password reset successfully. You can now log in.')),
+          // SỬA: Chuyển sang tiếng Việt
+          const SnackBar(content: Text('Đặt lại mật khẩu thành công. Bây giờ bạn có thể đăng nhập.')),
         );
         Navigator.of(context).pushNamedAndRemoveUntil(RouteName.login, (route) => false);
       } else {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to reset password. Please check the code and try again.')),
+          // SỬA: Chuyển sang tiếng Việt
+          const SnackBar(content: Text('Không thể đặt lại mật khẩu. Vui lòng kiểm tra mã và thử lại.')),
         );
       }
     }
@@ -44,21 +47,27 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    // ĐÃ XÓA: final l10n = AppLocalizations.of(context)!;
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.resetPassword)),
+      // SỬA: Chuyển sang tiếng Việt
+      appBar: AppBar(title: const Text('Đặt Lại Mật Khẩu')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
           child: Column(
             children: [
+              // SỬA: Chuyển sang tiếng Việt
+              const Text('Nhập mã bạn nhận được qua email và mật khẩu mới của bạn.'),
+              const SizedBox(height: 20),
               TextFormField(
                 controller: _codeController,
-                decoration: InputDecoration(labelText: l10n.code),
+                // SỬA: Chuyển sang tiếng Việt
+                decoration: const InputDecoration(labelText: 'Mã Đặt Lại'),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please enter the reset code';
+                    // SỬA: Chuyển sang tiếng Việt
+                    return 'Vui lòng nhập mã đặt lại';
                   }
                   return null;
                 },
@@ -66,11 +75,13 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
               const SizedBox(height: 16),
               TextFormField(
                 controller: _passwordController,
-                decoration: InputDecoration(labelText: l10n.newPassword),
+                // SỬA: Chuyển sang tiếng Việt
+                decoration: const InputDecoration(labelText: 'Mật Khẩu Mới'),
                 obscureText: true,
                 validator: (value) {
                   if (value == null || value.length < 6) {
-                    return 'Password must be at least 6 characters long';
+                    // SỬA: Chuyển sang tiếng Việt
+                    return 'Mật khẩu phải có ít nhất 6 ký tự';
                   }
                   return null;
                 },
@@ -78,7 +89,8 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
               const SizedBox(height: 20),
               _isLoading
                   ? const CircularProgressIndicator()
-                  : ElevatedButton(onPressed: _resetPassword, child: Text(l10n.resetPassword)),
+                  // SỬA: Chuyển sang tiếng Việt
+                  : ElevatedButton(onPressed: _resetPassword, child: const Text('Đặt Lại Mật Khẩu')),
             ],
           ),
         ),
