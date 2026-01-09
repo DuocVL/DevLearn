@@ -1,17 +1,34 @@
 import 'package:devlearn/data/api_client.dart';
-import 'package:devlearn/data/models/user.dart';
 import 'package:devlearn/data/repositories/auth_repository.dart';
 import 'package:devlearn/features/home/home_screen.dart';
 import 'package:devlearn/features/login/login_screen.dart';
-import 'package:devlearn/l10n/app_localizations.dart';
-import 'package:devlearn/routes/router.dart';
+import 'package:devlearn/data/models/user.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-final apiClient = ApiClient(dio: Dio(), secureStorage: const FlutterSecureStorage());
+// SỬA LỖI: Định nghĩa GlobalKey để truy cập Navigator
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
+// Khởi tạo các dịch vụ cốt lõi
+final secureStorage = const FlutterSecureStorage();
+final dio = Dio();
+
+// SỬA LỖI: Hàm callback để xử lý lỗi xác thực
+void _handleAuthenticationFailure() {
+  // Xóa tất cả các màn hình và đẩy màn hình đăng nhập
+  navigatorKey.currentState?.pushNamedAndRemoveUntil('/login', (route) => false);
+}
+
+// SỬA LỖI: Cập nhật khởi tạo ApiClient để truyền hàm callback
+final apiClient = ApiClient(
+  dio: dio,
+  secureStorage: secureStorage,
+  onAuthenticationFailure: _handleAuthenticationFailure, // Truyền hàm vào đây
+);
+
+final authRepository = AuthRepository();
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -28,46 +45,38 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   late Future<User?> _userFuture;
-  final _authRepo = AuthRepository();
 
   @override
   void initState() {
     super.initState();
-    _userFuture = _authRepo.checkAuth();
+    _userFuture = authRepository.checkAuth();
   }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      // SỬA LỖI: Gán navigatorKey cho MaterialApp
+      navigatorKey: navigatorKey,
       title: 'DevLearn',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        visualDensity: VisualDensity.adaptivePlatformDensity,
-      ),
-      localizationsDelegates: const [
-        AppLocalizations.delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
-      supportedLocales: const [
-        Locale('en', ''), 
-        Locale('vi', ''), 
-      ],
+      theme: ThemeData.dark(),
       home: FutureBuilder<User?>(
         future: _userFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Scaffold(body: Center(child: CircularProgressIndicator()));
-          }
-          if (snapshot.hasData) {
+            return const Scaffold(
+              body: Center(child: CircularProgressIndicator()),
+            );
+          } else if (snapshot.hasData && snapshot.data != null) {
             return const HomeScreen();
+          } else {
+            return const LoginScreen();
           }
-          return const LoginScreen();
         },
       ),
-      onGenerateRoute: onGenerateRoute,
-      initialRoute: '/',
+      routes: {
+        '/login': (context) => const LoginScreen(),
+        '/home': (context) => const HomeScreen(),
+      },
     );
   }
 }

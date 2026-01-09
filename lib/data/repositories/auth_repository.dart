@@ -7,16 +7,15 @@ class AuthRepository {
   final ApiClient _apiClient = apiClient;
   final _secureStorage = const FlutterSecureStorage();
 
-  // Cập nhật khóa để quản lý hai token (đã chuyển thành public)
   static const String accessTokenKey = 'access_token';
   static const String refreshTokenKey = 'refresh_token';
 
-  // Lưu cả hai token
   Future<void> _saveTokens(String accessToken, String refreshToken) async {
     await _secureStorage.write(key: accessTokenKey, value: accessToken);
     await _secureStorage.write(key: refreshTokenKey, value: refreshToken);
   }
 
+  // ĐÃ SỬA VÀ KÍCH HOẠT LẠI
   Future<User?> checkAuth() async {
     final hasToken = await _secureStorage.containsKey(key: accessTokenKey);
     if (hasToken) {
@@ -25,9 +24,11 @@ class AuthRepository {
     return null;
   }
 
+  // ĐÃ SỬA VÀ KÍCH HOẠT LẠI
   Future<User?> getProfile() async {
     try {
-      final response = await _apiClient.get('/auth/profile');
+      // SỬA LỖI: Sử dụng endpoint chính xác từ backend
+      final response = await _apiClient.get('/users/profile'); 
       if (response.statusCode == 200) {
         return User.fromJson(response.data);
       }
@@ -59,13 +60,10 @@ class AuthRepository {
     try {
       final response = await _apiClient.post(
         '/auth/register',
-        data: {'name': name, 'email': email, 'password': password},
+        // ĐÃ XÁC NHẬN: Backend mong muốn 'username'
+        data: {'username': name, 'email': email, 'password': password}, 
       );
-      if (response.statusCode == 201 && response.data['accessToken'] != null) {
-        await _saveTokens(response.data['accessToken'], response.data['refreshToken']);
-        return true;
-      }
-      return false;
+      return response.statusCode == 201;
     } catch (e) {
       print(e);
       return false;
@@ -78,10 +76,9 @@ class AuthRepository {
 
     try {
       final response = await _apiClient.post(
-        '/auth/refresh-token', // Đảm bảo điểm cuối này tồn tại trên máy chủ của bạn
+        '/refresh',
         data: {'refreshToken': refreshToken},
       );
-
       if (response.statusCode == 200 && response.data['accessToken'] != null) {
         await _saveTokens(response.data['accessToken'], response.data['refreshToken']);
         return true;
@@ -89,17 +86,25 @@ class AuthRepository {
       return false;
     } catch (e) {
       print(e);
-      await logout(); // Đăng xuất nếu không thể làm mới token
+      await logout();
       return false;
     }
   }
 
   Future<void> logout() async {
+    final refreshToken = await _secureStorage.read(key: refreshTokenKey);
+    if (refreshToken != null) {
+        try {
+            await _apiClient.post('/auth/logout', data: {'refreshToken': refreshToken});
+        } catch (e) {
+            print("Failed to logout from server: $e");
+        }
+    }
     await _secureStorage.delete(key: accessTokenKey);
     await _secureStorage.delete(key: refreshTokenKey);
   }
 
-  // Các phương thức OAuth cũng cần được cập nhật để lưu cả hai token
+  // OAuth Methods
   Future<bool> loginWithGoogle(String idToken) async {
     try {
       final response = await _apiClient.post('/auth/oauth/google', data: {'idToken': idToken});
@@ -128,10 +133,10 @@ class AuthRepository {
     }
   }
 
-  // Các phương thức khác không thay đổi
+  // SỬA LỖI: Đổi tên để khớp với UI, giữ đúng endpoint
   Future<bool> sendResetCode(String email) async {
     try {
-      final response = await _apiClient.post('/auth/forgot/send-code', data: {'email': email});
+      final response = await _apiClient.post('/auth/forgot-password', data: {'email': email});
       return response.statusCode == 200;
     } catch (e) {
       print(e);
@@ -139,10 +144,11 @@ class AuthRepository {
     }
   }
 
+  // SỬA LỖI: Cập nhật chữ ký phương thức và payload
   Future<bool> resetPassword(String email, String code, String newPassword) async {
     try {
       final response = await _apiClient.post(
-        '/auth/forgot/reset',
+        '/auth/reset-password',
         data: {'email': email, 'code': code, 'newPassword': newPassword},
       );
       return response.statusCode == 200;
