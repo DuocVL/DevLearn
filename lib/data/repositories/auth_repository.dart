@@ -7,7 +7,6 @@ class AuthRepository {
   final ApiClient _apiClient = apiClient;
   final _secureStorage = const FlutterSecureStorage();
 
-  // SỬA: Đổi tên key để khớp với ApiClient Interceptor
   static const String accessTokenKey = 'access_token';
   static const String refreshTokenKey = 'refresh_token';
 
@@ -17,7 +16,6 @@ class AuthRepository {
   }
 
   Future<User?> checkAuth() async {
-    // SỬA: Kiểm tra key đã được đổi tên
     final hasToken = await _secureStorage.containsKey(key: accessTokenKey);
     if (hasToken) {
       return getProfile();
@@ -27,7 +25,7 @@ class AuthRepository {
 
   Future<User?> getProfile() async {
     try {
-      final response = await _apiClient.get('/users/profile'); 
+      final response = await _apiClient.get('/users/profile');
       if (response.statusCode == 200) {
         return User.fromJson(response.data);
       }
@@ -44,9 +42,7 @@ class AuthRepository {
         '/auth/login',
         data: {'email': email, 'password': password},
       );
-      // SỬA: Đọc đúng key từ payload đăng nhập
       if (response.statusCode == 200 && response.data['accessToken'] != null) {
-        // Lưu token với key đã được sửa (`access_token`, `refresh_token`)
         await _saveTokens(response.data['accessToken'], response.data['refreshToken']);
         return true;
       }
@@ -61,7 +57,7 @@ class AuthRepository {
     try {
       final response = await _apiClient.post(
         '/auth/register',
-        data: {'username': username, 'email': email, 'password': password}, 
+        data: {'username': username, 'email': email, 'password': password},
       );
       return response.statusCode == 201;
     } catch (e) {
@@ -71,13 +67,12 @@ class AuthRepository {
   }
 
   Future<bool> refreshToken() async {
-    // SỬA: Đọc đúng key đã được đổi tên
     final refreshToken = await _secureStorage.read(key: refreshTokenKey);
     if (refreshToken == null) return false;
 
     try {
       final response = await _apiClient.post(
-        '/refresh', // Giả sử endpoint là /refresh, cần xác nhận lại
+        '/refresh',
         data: {'refreshToken': refreshToken},
       );
       if (response.statusCode == 200 && response.data['accessToken'] != null) {
@@ -93,22 +88,19 @@ class AuthRepository {
   }
 
   Future<void> logout() async {
-    // SỬA: Đọc đúng key đã được đổi tên
     final refreshToken = await _secureStorage.read(key: refreshTokenKey);
     if (refreshToken != null) {
-        try {
-            await _apiClient.post('/auth/logout', data: {'refreshToken': refreshToken});
-        } catch (e) {
-            print("Failed to logout from server: $e");
-        }
+      try {
+        await _apiClient.post('/auth/logout', data: {'refreshToken': refreshToken});
+      } catch (e) {
+        print("Failed to logout from server: $e");
+      }
     }
-    // SỬA: Xóa đúng key đã được đổi tên
     await _secureStorage.delete(key: accessTokenKey);
     await _secureStorage.delete(key: refreshTokenKey);
   }
 
-  // ... (Các phương thức OAuth và reset password không đổi nhưng sẽ được hưởng lợi từ việc sửa key)
-   Future<bool> loginWithGoogle(String idToken) async {
+  Future<bool> loginWithGoogle(String idToken) async {
     try {
       final response = await _apiClient.post('/auth/oauth/google', data: {'idToken': idToken});
       if (response.statusCode == 200 && response.data['accessToken'] != null) {

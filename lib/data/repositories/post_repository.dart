@@ -1,85 +1,53 @@
-import 'dart:convert';
+import 'package:devlearn/data/api_client.dart';
 import 'package:devlearn/data/models/post.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:http/http.dart' as http;
+import 'package:devlearn/main.dart';
 
 class PostRepository {
-  final _storage = const FlutterSecureStorage();
+  final ApiClient _apiClient = apiClient;
 
+  // Lấy danh sách các bài viết với phân trang
   Future<List<Post>> getPosts({int page = 1, int limit = 20}) async {
-    final baseUrl = dotenv.env['BACKEND_URL'];
-    if (baseUrl == null) {
-      throw Exception('BACKEND_URL not found in .env file');
-    }
+    try {
+      final response = await _apiClient.get(
+        '/posts',
+        queryParameters: {
+          'page': page.toString(),
+          'limit': limit.toString(),
+        },
+      );
 
-    final token = await _storage.read(key: 'accessToken');
-    if (token == null) {
-      throw Exception('Access token not found');
-    }
-
-    final uri = Uri.parse('$baseUrl/posts').replace(
-      queryParameters: {
-        'page': '$page',
-        'limit': '$limit',
-      },
-    );
-
-    final response = await http.get(
-      uri,
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
-      },
-    );
-
-    if (response.statusCode == 200) {
-      // The backend returns { data: [...], pagination: {...} }
-      final body = json.decode(response.body);
-      final List<dynamic> postsJson = body['data'];
-      return postsJson
-          .map((json) => Post.fromJson(json))
-          .toList();
-    } else {
-      final body = json.decode(response.body);
-      final errorMessage = body['message'] ?? 'Failed to load posts';
-      throw Exception(errorMessage);
+      if (response.statusCode == 200 && response.data['data'] != null) {
+        List<dynamic> postsJson = response.data['data'];
+        return postsJson.map((json) => Post.fromJson(json)).toList();
+      }
+      return [];
+    } catch (e) {
+      print(e);
+      throw Exception('Failed to load posts: $e');
     }
   }
 
-  Future<Post> addPost(String title, String content, List<String> tags, bool anonymous) async {
-    final baseUrl = dotenv.env['BACKEND_URL'];
-    if (baseUrl == null) {
-      throw Exception('BACKEND_URL not found in .env file');
-    }
+  // THÊM: Phương thức tạo bài viết mới
+  Future<void> addPost(String title, String content, List<String> tags, bool anonymous) async {
+    try {
+      final response = await _apiClient.post(
+        '/posts',
+        data: {
+          'title': title,
+          'content': content,
+          'tags': tags,
+          'anonymous': anonymous,
+        },
+      );
 
-    final token = await _storage.read(key: 'accessToken');
-    if (token == null) {
-      throw Exception('Access token not found');
-    }
-
-    final response = await http.post(
-      Uri.parse('$baseUrl/posts'),
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
-      },
-      body: json.encode({
-        'title': title,
-        'content': content,
-        'tags': tags,
-        'anonymous': anonymous,
-      }),
-    );
-
-    if (response.statusCode == 201) {
-      final body = json.decode(response.body);
-      return Post.fromJson(body['post']);
-    } else {
-      final body = json.decode(response.body);
-      final errorMessage = body['message'] ?? 'Failed to create post';
-      throw Exception(errorMessage);
+      // Backend trả về 201 Created khi thành công
+      if (response.statusCode != 201) {
+        // Ném lỗi nếu server không trả về mã thành công
+        throw Exception('Failed to create post. Server responded with ${response.statusCode}');
+      }
+    } catch (e) {
+      print(e);
+      throw Exception('Failed to create post: $e');
     }
   }
 }
-
