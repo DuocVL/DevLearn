@@ -1,20 +1,18 @@
 import 'package:devlearn/data/api_client.dart';
-import 'package:devlearn/data/models/problem_summary.dart'; // SỬA: Import model từ tệp riêng
+import 'package:devlearn/data/models/problem.dart'; // SỬA: Import model Problem chi tiết
+import 'package:devlearn/data/models/problem_summary.dart';
 import 'package:devlearn/main.dart';
-
-// ĐÃ XÓA: Định nghĩa class ProblemSummary đã được chuyển đi
 
 class ProblemRepository {
   final ApiClient _apiClient = apiClient;
 
-  // Lấy danh sách bài toán với phân trang và bộ lọc
+  // Lấy danh sách bài toán (tóm tắt) với phân trang và bộ lọc
   Future<List<ProblemSummary>> getProblems({int page = 1, int limit = 20, String? difficulty}) async {
     try {
       Map<String, dynamic> queryParams = {
         'page': page.toString(),
         'limit': limit.toString(),
       };
-      // Chỉ thêm difficulty vào query nếu nó không phải là "All" hoặc null
       if (difficulty != null && difficulty != 'All') {
         queryParams['difficulty'] = difficulty;
       }
@@ -28,8 +26,23 @@ class ProblemRepository {
       return [];
     } catch (e) {
       print(e);
-      // Ném lại lỗi để UI có thể xử lý
       throw Exception('Failed to load problems: $e');
+    }
+  }
+
+  // THÊM: Lấy chi tiết một bài toán bằng ID
+  Future<Problem> getProblemById(String problemId) async {
+    try {
+      final response = await _apiClient.get('/problems/$problemId');
+
+      if (response.statusCode == 200) {
+        // Dữ liệu chi tiết của bài toán nằm trong response.data
+        return Problem.fromJson(response.data);
+      }
+      throw Exception('Failed to load problem details. Status code: ${response.statusCode}');
+    } catch (e) {
+      print(e);
+      throw Exception('Failed to load problem details: $e');
     }
   }
 }

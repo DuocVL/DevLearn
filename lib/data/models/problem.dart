@@ -1,5 +1,3 @@
-import 'package:devlearn/data/models/example.dart';
-
 class Problem {
   final String id;
   final String title;
@@ -7,12 +5,9 @@ class Problem {
   final String difficulty;
   final List<String> tags;
   final List<Example> examples;
-  final List<String> constraints; 
-  final List<String> hints;
+  final List<String> constraints;
+  final List<StarterCode> starterCode;
   final int likeCount;
-  final int commentCount;
-  final int totalSubmissions;
-  final int acceptedSubmissions;
 
   Problem({
     required this.id,
@@ -22,27 +17,61 @@ class Problem {
     required this.tags,
     required this.examples,
     required this.constraints,
-    required this.hints,
+    required this.starterCode,
     required this.likeCount,
-    required this.commentCount,
-    required this.totalSubmissions,
-    required this.acceptedSubmissions,
   });
 
-  factory Problem.fromJson(Map<String, dynamic> json){
+  factory Problem.fromJson(Map<String, dynamic> json) {
     return Problem(
-      id: json['id'],
-      title: json['title'], 
-      description: json['description'], 
-      difficulty: json['difficulty'], 
-      tags: (json['tags'] == null) ? [] : json['tags'],
-      examples: (json['examples'] == null) ? [] : (json['examples'] as List).map((itemJson) => Example.fromJson(itemJson)).toList(),
-      constraints: (json['constraints'] == null) ? [] : json['constraints'],
-      hints: (json['hints'] == null) ? [] : json['hints'],
-      likeCount: json['likeCount'], 
-      commentCount: json['commentCount'], 
-      totalSubmissions: json['totalSubmissions'], 
-      acceptedSubmissions: json['acceptedSubmissions'],
+      id: json['_id'], // SỬA: Backend dùng '_id'
+      title: json['title'] ?? 'No Title',
+      description: json['description'] ?? '',
+      difficulty: json['difficulty'] ?? 'Unknown',
+      tags: List<String>.from(json['tags'] ?? []),
+      examples: (json['examples'] as List<dynamic>?)
+              ?.map((e) => Example.fromJson(e))
+              .toList() ??
+          [],
+      constraints: List<String>.from(json['constraints'] ?? []),
+      starterCode: (json['starterCode'] as List<dynamic>?)
+              ?.map((e) => StarterCode.fromJson(e))
+              .toList() ??
+          [],
+      likeCount: json['likeCount'] ?? 0,
+    );
+  }
+}
+
+class Example {
+  final String input;
+  final String output;
+  final String? explanation;
+
+  Example({
+    required this.input,
+    required this.output,
+    this.explanation,
+  });
+
+  factory Example.fromJson(Map<String, dynamic> json) {
+    return Example(
+      input: json['input'] ?? '',
+      output: json['output'] ?? '',
+      explanation: json['explanation'],
+    );
+  }
+}
+
+class StarterCode {
+  final String language;
+  final String code;
+
+  StarterCode({required this.language, required this.code});
+
+  factory StarterCode.fromJson(Map<String, dynamic> json) {
+    return StarterCode(
+      language: json['language'] ?? 'plaintext',
+      code: json['code'] ?? '',
     );
   }
 }
