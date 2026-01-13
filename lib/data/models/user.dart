@@ -1,6 +1,7 @@
 class User {
   final String id;
-  final String name;
+  // SỬA: Đổi tên thuộc tính để đồng bộ
+  final String username;
   final String email;
   final String? avatarUrl;
   final int solvedCount;
@@ -9,7 +10,8 @@ class User {
 
   User({
     required this.id,
-    required this.name,
+    // SỬA: Cập nhật constructor
+    required this.username,
     required this.email,
     this.avatarUrl,
     this.solvedCount = 0,
@@ -18,14 +20,17 @@ class User {
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
+    final userData = json.containsKey('user') ? json['user'] as Map<String, dynamic> : json;
+
     return User(
-      id: json['id'],
-      name: json['name'],
-      email: json['email'],
-      avatarUrl: json['avatarUrl'],
-      solvedCount: json['solvedCount'] ?? 0,
-      postCount: json['postCount'] ?? 0,
-      followerCount: json['followerCount'] ?? 0,
+      id: userData['_id'] ?? '',
+      // SỬA: Gán vào thuộc tính `username` mới
+      username: userData['username'] ?? 'No Name',
+      email: userData['email'] ?? '',
+      avatarUrl: userData['avatarUrl'],
+      solvedCount: userData['solvedCount'] ?? 0,
+      postCount: userData['postCount'] ?? 0,
+      followerCount: userData['followerCount'] ?? 0,
     );
   }
 }

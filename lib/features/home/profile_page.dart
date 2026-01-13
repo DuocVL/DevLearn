@@ -1,10 +1,9 @@
 import 'package:devlearn/data/models/user.dart';
 import 'package:devlearn/data/repositories/auth_repository.dart';
-import 'package:devlearn/main.dart'; // SỬA LỖI: Thêm import để truy cập biến authRepository toàn cục
+import 'package:devlearn/main.dart';
 import 'package:flutter/material.dart';
 
 class ProfilePage extends StatefulWidget {
-  // SỬA: Thêm callback để xử lý đăng xuất
   final VoidCallback onLogout;
 
   const ProfilePage({super.key, required this.onLogout});
@@ -14,21 +13,16 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-  // SỬA: Không cần khởi tạo AuthRepository ở đây nữa vì nó đã có ở global
-  // final _authRepo = AuthRepository();
   late Future<User?> _userFuture;
 
   @override
   void initState() {
     super.initState();
-    // Lấy thông tin user từ `main.dart` thay vì gọi lại API
     _userFuture = authRepository.getProfile();
   }
 
-  // Hàm đăng xuất mới
   Future<void> _logout() async {
     await authRepository.logout();
-    // Gọi callback để thông báo cho MyApp
     widget.onLogout();
   }
 
@@ -80,7 +74,8 @@ class _ProfilePageState extends State<ProfilePage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(user.name, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+                          // SỬA: Thay `user.name` bằng `user.username`
+                          Text(user.username, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
                           const SizedBox(height: 6),
                           Text(user.email, style: const TextStyle(color: Colors.white70)),
                         ],
@@ -109,7 +104,6 @@ class _ProfilePageState extends State<ProfilePage> {
                       ),
                     ),
                     const SizedBox(height: 12),
-                    // SỬA: Kết nối nút đăng xuất với hàm _logout mới
                     ElevatedButton.icon(onPressed: _logout, icon: const Icon(Icons.logout), label: const Text('Logout')),
                   ],
                 ),
