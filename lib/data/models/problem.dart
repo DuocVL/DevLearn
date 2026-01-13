@@ -1,63 +1,22 @@
-class Problem {
-  final String id;
-  final String title;
-  final String description;
-  final String difficulty;
-  final List<String> tags;
-  final List<Example> examples;
-  final List<String> constraints;
-  final List<StarterCode> starterCode;
-  final int likeCount;
+/// SỬA ĐỔI HOÀN TOÀN FILE NÀY ĐỂ ĐỒNG BỘ VỚI SERVER
 
-  Problem({
-    required this.id,
-    required this.title,
-    required this.description,
-    required this.difficulty,
-    required this.tags,
-    required this.examples,
-    required this.constraints,
-    required this.starterCode,
-    required this.likeCount,
-  });
-
-  factory Problem.fromJson(Map<String, dynamic> json) {
-    return Problem(
-      id: json['_id'], // SỬA: Backend dùng '_id'
-      title: json['title'] ?? 'No Title',
-      description: json['description'] ?? '',
-      difficulty: json['difficulty'] ?? 'Unknown',
-      tags: List<String>.from(json['tags'] ?? []),
-      examples: (json['examples'] as List<dynamic>?)
-              ?.map((e) => Example.fromJson(e))
-              .toList() ??
-          [],
-      constraints: List<String>.from(json['constraints'] ?? []),
-      starterCode: (json['starterCode'] as List<dynamic>?)
-              ?.map((e) => StarterCode.fromJson(e))
-              .toList() ??
-          [],
-      likeCount: json['likeCount'] ?? 0,
-    );
-  }
-}
-
-class Example {
+// 1. Đổi tên class Example -> Testcase và cập nhật trường cho khớp với `testcaseSchema`
+class Testcase {
   final String input;
   final String output;
-  final String? explanation;
+  final bool isHidden;
 
-  Example({
+  Testcase({
     required this.input,
     required this.output,
-    this.explanation,
+    required this.isHidden,
   });
 
-  factory Example.fromJson(Map<String, dynamic> json) {
-    return Example(
-      input: json['input'] ?? '',
-      output: json['output'] ?? '',
-      explanation: json['explanation'],
+  factory Testcase.fromJson(Map<String, dynamic> json) {
+    return Testcase(
+      input: json['input'] as String? ?? '',
+      output: json['output'] as String? ?? '',
+      isHidden: json['isHidden'] as bool? ?? false,
     );
   }
 }
@@ -70,8 +29,63 @@ class StarterCode {
 
   factory StarterCode.fromJson(Map<String, dynamic> json) {
     return StarterCode(
-      language: json['language'] ?? 'plaintext',
-      code: json['code'] ?? '',
+      language: json['language'] as String? ?? 'plaintext',
+      code: json['code'] as String? ?? '',
+    );
+  }
+}
+
+// 2. Cập nhật toàn bộ class Problem
+class Problem {
+  final String id;
+  final String title;
+  final String description;
+  final String difficulty;
+  final List<String> tags;
+  final List<Testcase> testcases; // SỬA: Đổi từ examples -> testcases
+  final List<StarterCode> starterCode;
+  final int totalSubmissions;     // SỬA: Thêm trường này
+  final int acceptedSubmissions;  // SỬA: Thêm trường này
+
+  Problem({
+    required this.id,
+    required this.title,
+    required this.description,
+    required this.difficulty,
+    required this.tags,
+    required this.testcases,
+    required this.starterCode,
+    required this.totalSubmissions,
+    required this.acceptedSubmissions,
+  });
+
+  // 3. Cập nhật lại hoàn toàn hàm fromJson
+  factory Problem.fromJson(Map<String, dynamic> json) {
+    // Kỹ thuật an toàn để xử lý danh sách có thể chứa null
+    final safeTags = (json['tags'] as List<dynamic>? ?? [])
+        .map((tag) => tag as String?)
+        .where((tag) => tag != null)
+        .cast<String>()
+        .toList();
+
+    final safeTestcases = (json['testcases'] as List<dynamic>? ?? [])
+        .map((t) => Testcase.fromJson(t))
+        .toList();
+
+    final safeStarterCode = (json['starterCode'] as List<dynamic>? ?? [])
+        .map((sc) => StarterCode.fromJson(sc))
+        .toList();
+
+    return Problem(
+      id: json['_id'] as String? ?? '', // Backend dùng '_id'
+      title: json['title'] as String? ?? 'No Title',
+      description: json['description'] as String? ?? '',
+      difficulty: json['difficulty'] as String? ?? 'Unknown',
+      tags: safeTags, 
+      testcases: safeTestcases,
+      starterCode: safeStarterCode,
+      totalSubmissions: json['totalSubmissions'] as int? ?? 0,
+      acceptedSubmissions: json['acceptedSubmissions'] as int? ?? 0,
     );
   }
 }

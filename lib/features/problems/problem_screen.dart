@@ -4,7 +4,6 @@ import 'package:devlearn/features/problems/widgets/code_editor.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 
-// SỬA LẠI: Đổi tên idProblem -> problemId để thống nhất
 class ProblemScreen extends StatefulWidget {
   final String problemId;
   const ProblemScreen({super.key, required this.problemId});
@@ -21,7 +20,6 @@ class _ProblemScreenState extends State<ProblemScreen> with TickerProviderStateM
   @override
   void initState() {
     super.initState();
-    // SỬA: Tải dữ liệu thật từ server bằng ID
     _problemFuture = _repo.getProblemById(widget.problemId);
     _tabController = TabController(length: 3, vsync: this);
   }
@@ -39,7 +37,6 @@ class _ProblemScreenState extends State<ProblemScreen> with TickerProviderStateM
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        // SỬA: Tiêu đề động sau khi dữ liệu được tải
         title: FutureBuilder<Problem>(
           future: _problemFuture,
           builder: (context, snapshot) {
@@ -51,7 +48,6 @@ class _ProblemScreenState extends State<ProblemScreen> with TickerProviderStateM
         ),
         elevation: 0.5,
       ),
-      // SỬA: Thay thế hoàn toàn body bằng FutureBuilder để xử lý trạng thái tải dữ liệu
       body: FutureBuilder<Problem>(
         future: _problemFuture,
         builder: (context, snapshot) {
@@ -67,7 +63,6 @@ class _ProblemScreenState extends State<ProblemScreen> with TickerProviderStateM
 
           final problem = snapshot.data!;
 
-          // SỬA: Tái cấu trúc với TabView và thiết kế mới
           return Column(
             children: [
               TabBar(
@@ -98,8 +93,14 @@ class _ProblemScreenState extends State<ProblemScreen> with TickerProviderStateM
     );
   }
 
+  // SỬA ĐỔI: Cập nhật widget để dùng model mới
   Widget _buildDescriptionTab(Problem problem) {
     final theme = Theme.of(context);
+    // Tính toán tỷ lệ chấp nhận một cách an toàn
+    final double acceptanceRate = (problem.totalSubmissions > 0)
+        ? (problem.acceptedSubmissions / problem.totalSubmissions) * 100
+        : 0.0;
+
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
       child: Column(
@@ -107,9 +108,23 @@ class _ProblemScreenState extends State<ProblemScreen> with TickerProviderStateM
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.start, 
             children: [
                _buildDifficultyChip(problem.difficulty, theme),
-               Text('${problem.likeCount} likes', style: theme.textTheme.bodyMedium)
+               // SỬA: Thay thế likeCount bằng Tỷ lệ chấp nhận
+               Column(
+                 crossAxisAlignment: CrossAxisAlignment.end,
+                 children: [
+                   Text(
+                     '${acceptanceRate.toStringAsFixed(1)}%',
+                     style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                   ),
+                   Text(
+                     'Tỷ lệ chấp nhận',
+                     style: theme.textTheme.bodySmall,
+                   )
+                 ],
+               )
             ],
           ),
           const SizedBox(height: 16),
@@ -126,12 +141,9 @@ class _ProblemScreenState extends State<ProblemScreen> with TickerProviderStateM
             ),
           ),
           const SizedBox(height: 24),
-          ..._buildExamples(problem.examples, theme),
-          if (problem.constraints.isNotEmpty) ...[
-            Text('Ràng buộc:', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            MarkdownBody(data: problem.constraints.map((c) => '• `$c`').join('\n')),
-          ],
+          // SỬA: Gọi _buildTestcases thay vì _buildExamples
+          ..._buildTestcases(problem.testcases, theme),
+          // SỬA: Xóa bỏ phần hiển thị constraints vì không còn tồn tại
         ],
       ),
     );
@@ -160,14 +172,18 @@ class _ProblemScreenState extends State<ProblemScreen> with TickerProviderStateM
     );
   }
 
-  List<Widget> _buildExamples(List<Example> examples, ThemeData theme) {
-    if (examples.isEmpty) return [];
+  // SỬA ĐỔI: Đổi tên, kiểu dữ liệu và logic của hàm để khớp model mới
+  List<Widget> _buildTestcases(List<Testcase> testcases, ThemeData theme) {
+    // Lọc ra những testcase không bị ẩn để hiển thị làm ví dụ
+    final visibleTestcases = testcases.where((tc) => !tc.isHidden).toList();
+    if (visibleTestcases.isEmpty) return [];
+
     return [
       Text('Ví dụ:', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
       const SizedBox(height: 12),
-      ...examples.asMap().entries.map((entry) {
+      ...visibleTestcases.asMap().entries.map((entry) {
         int idx = entry.key;
-        Example ex = entry.value;
+        Testcase tc = entry.value;
         return Container(
           width: double.infinity,
           margin: const EdgeInsets.only(bottom: 12.0),
@@ -181,14 +197,10 @@ class _ProblemScreenState extends State<ProblemScreen> with TickerProviderStateM
             children: [
               Text('Ví dụ ${idx + 1}', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
-              _codeBlock('Input', ex.input, theme),
+              _codeBlock('Input', tc.input, theme),
               const SizedBox(height: 8),
-              _codeBlock('Output', ex.output, theme),
-              if (ex.explanation != null && ex.explanation!.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.only(top: 8.0),
-                  child: Text('Giải thích: ${ex.explanation}'),
-                ),
+              _codeBlock('Output', tc.output, theme),
+              // SỬA: Xóa bỏ phần hiển thị explanation vì không còn tồn tại
             ],
           ),
         );
