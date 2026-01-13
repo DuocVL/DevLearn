@@ -6,29 +6,38 @@ import 'package:devlearn/features/home/profile_page.dart';
 import 'package:devlearn/features/home/tutorial_page.dart';
 import 'package:flutter/material.dart';
 
-// Home screen wrapper with adaptive AppBar and FAB suitable for a learning app
-
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  // SỬA: Thêm callback để xử lý đăng xuất
+  final VoidCallback onLogout;
+
+  const HomeScreen({super.key, required this.onLogout});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-
   int _selectedIndex = 0;
 
-  final List<Widget> _pages = const [
-    HomePage(),
-    TutorialPage(),
-    ProblemPage(),
-    PostPage(),
-    ProfilePage(),
-  ];
+  // SỬA: _pages không thể là const nữa vì ProfilePage cần tham số
+  late final List<Widget> _pages;
 
-  void _onItemTapped(int index){
-    setState( () => _selectedIndex = index );
+  @override
+  void initState() {
+    super.initState();
+    // Khởi tạo danh sách các trang ở đây
+    _pages = [
+      const HomePage(),
+      const TutorialPage(),
+      const ProblemPage(),
+      const PostPage(),
+      // Truyền callback onLogout vào ProfilePage
+      ProfilePage(onLogout: widget.onLogout), 
+    ];
+  }
+
+  void _onItemTapped(int index) {
+    setState(() => _selectedIndex = index);
   }
 
   @override
@@ -44,7 +53,6 @@ class _HomeScreenState extends State<HomeScreen> {
               tooltip: 'Search',
               icon: const Icon(Icons.search),
               onPressed: () {
-                // optional: open search UI
                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Open search')));
               },
             ),

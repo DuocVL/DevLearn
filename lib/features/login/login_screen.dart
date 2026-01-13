@@ -3,10 +3,11 @@ import 'package:devlearn/features/register/register_screen.dart';
 import 'package:devlearn/routes/route_name.dart';
 import 'package:flutter/material.dart';
 
-// ĐÃ XÓA: import 'package:devlearn/l10n/app_localizations.dart';
-
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+  // SỬA: Thêm callback để thông báo đăng nhập thành công
+  final VoidCallback onLoginSuccess;
+
+  const LoginScreen({super.key, required this.onLoginSuccess});
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -26,30 +27,25 @@ class _LoginScreenState extends State<LoginScreen> {
         _emailController.text,
         _passwordController.text,
       );
-      setState(() => _isLoading = false);
+      // Không cần setState ở đây nữa vì widget sẽ bị hủy
+
       if (success) {
-        if (!mounted) return;
-        Navigator.of(context).pushReplacementNamed(RouteName.home);
+        // SỬA: Không điều hướng nữa, chỉ gọi callback
+        widget.onLoginSuccess();
       } else {
+        // Cần kiểm tra `mounted` vì có thể widget đã bị hủy trong lúc chờ
         if (!mounted) return;
+        setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          // SỬA: Chuyển sang tiếng Việt
           const SnackBar(content: Text('Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.')),
         );
       }
     }
   }
 
-  /*
-  Future<void> _loginWithGoogle() async { ... }
-  Future<void> _loginWithGithub() async { ... }
-  */
-
   @override
   Widget build(BuildContext context) {
-    // ĐÃ XÓA: final l10n = AppLocalizations.of(context)!;
     return Scaffold(
-      // SỬA: Chuyển sang tiếng Việt
       appBar: AppBar(title: const Text('Đăng nhập')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -59,12 +55,10 @@ class _LoginScreenState extends State<LoginScreen> {
             children: [
               TextFormField(
                 controller: _emailController,
-                // SỬA: Chuyển sang tiếng Việt
                 decoration: const InputDecoration(labelText: 'Email'),
                 keyboardType: TextInputType.emailAddress,
                 validator: (value) {
                   if (value == null || value.isEmpty || !value.contains('@')) {
-                    // SỬA: Chuyển sang tiếng Việt
                     return 'Vui lòng nhập một email hợp lệ';
                   }
                   return null;
@@ -73,12 +67,10 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: 16),
               TextFormField(
                 controller: _passwordController,
-                // SỬA: Chuyển sang tiếng Việt
                 decoration: const InputDecoration(labelText: 'Mật khẩu'),
                 obscureText: true,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    // SỬA: Chuyển sang tiếng Việt
                     return 'Vui lòng nhập mật khẩu của bạn';
                   }
                   return null;
@@ -89,29 +81,20 @@ class _LoginScreenState extends State<LoginScreen> {
                 alignment: Alignment.centerRight,
                 child: TextButton(
                   onPressed: () => Navigator.of(context).pushNamed(RouteName.forgotPassword),
-                  // SỬA: Chuyển sang tiếng Việt
                   child: const Text('Quên mật khẩu?'),
                 ),
               ),
               const SizedBox(height: 20),
               _isLoading
                   ? const CircularProgressIndicator()
-                  // SỬA: Chuyển sang tiếng Việt
                   : ElevatedButton(onPressed: _login, child: const Text('Đăng nhập')),
               const SizedBox(height: 20),
               const Divider(),
-              /*
-              const SizedBox(height: 10),
-              SignInButton( ... ),
-              const SizedBox(height: 10),
-               SignInButton( ... ),
-              */
               const SizedBox(height: 20),
               TextButton(
                 onPressed: () {
                   Navigator.of(context).push(MaterialPageRoute(builder: (_) => const RegisterScreen()));
                 },
-                // SỬA: Chuyển sang tiếng Việt
                 child: const Text('Đăng ký'),
               ),
             ],
