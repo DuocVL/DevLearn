@@ -1,6 +1,8 @@
 import 'package:devlearn/data/models/problem.dart';
 import 'package:devlearn/data/repositories/problem_repository.dart';
 import 'package:devlearn/features/problems/widgets/code_editor.dart';
+// THÊM: Import widget mới cho tab lịch sử
+import 'package:devlearn/features/problems/widgets/submission_history_tab.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 
@@ -76,13 +78,14 @@ class _ProblemScreenState extends State<ProblemScreen> with TickerProviderStateM
               Expanded(
                 child: TabBarView(
                   controller: _tabController,
-                  physics: const NeverScrollableScrollPhysics(), // Tắt cuộn ngang
+                  physics: const NeverScrollableScrollPhysics(),
                   children: [
                     _buildDescriptionTab(problem),
                     problem.starterCode.isNotEmpty
                         ? CodeEditor(starterCode: problem.starterCode, onSubmit: _handleSubmit)
                         : const Center(child: Text('Phần code cho bài tập này chưa có sẵn.')),
-                    const Center(child: Text('Lịch sử các lần nộp bài sẽ được hiển thị ở đây.')),
+                    // SỬA: Tích hợp widget SubmissionHistoryTab
+                    SubmissionHistoryTab(problemId: problem.id),
                   ],
                 ),
               ),
@@ -93,10 +96,8 @@ class _ProblemScreenState extends State<ProblemScreen> with TickerProviderStateM
     );
   }
 
-  // SỬA ĐỔI: Cập nhật widget để dùng model mới
   Widget _buildDescriptionTab(Problem problem) {
     final theme = Theme.of(context);
-    // Tính toán tỷ lệ chấp nhận một cách an toàn
     final double acceptanceRate = (problem.totalSubmissions > 0)
         ? (problem.acceptedSubmissions / problem.totalSubmissions) * 100
         : 0.0;
@@ -111,7 +112,6 @@ class _ProblemScreenState extends State<ProblemScreen> with TickerProviderStateM
             crossAxisAlignment: CrossAxisAlignment.start, 
             children: [
                _buildDifficultyChip(problem.difficulty, theme),
-               // SỬA: Thay thế likeCount bằng Tỷ lệ chấp nhận
                Column(
                  crossAxisAlignment: CrossAxisAlignment.end,
                  children: [
@@ -141,9 +141,7 @@ class _ProblemScreenState extends State<ProblemScreen> with TickerProviderStateM
             ),
           ),
           const SizedBox(height: 24),
-          // SỬA: Gọi _buildTestcases thay vì _buildExamples
           ..._buildTestcases(problem.testcases, theme),
-          // SỬA: Xóa bỏ phần hiển thị constraints vì không còn tồn tại
         ],
       ),
     );
@@ -172,9 +170,7 @@ class _ProblemScreenState extends State<ProblemScreen> with TickerProviderStateM
     );
   }
 
-  // SỬA ĐỔI: Đổi tên, kiểu dữ liệu và logic của hàm để khớp model mới
   List<Widget> _buildTestcases(List<Testcase> testcases, ThemeData theme) {
-    // Lọc ra những testcase không bị ẩn để hiển thị làm ví dụ
     final visibleTestcases = testcases.where((tc) => !tc.isHidden).toList();
     if (visibleTestcases.isEmpty) return [];
 
@@ -200,7 +196,6 @@ class _ProblemScreenState extends State<ProblemScreen> with TickerProviderStateM
               _codeBlock('Input', tc.input, theme),
               const SizedBox(height: 8),
               _codeBlock('Output', tc.output, theme),
-              // SỬA: Xóa bỏ phần hiển thị explanation vì không còn tồn tại
             ],
           ),
         );
