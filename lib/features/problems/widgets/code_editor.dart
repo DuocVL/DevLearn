@@ -1,13 +1,22 @@
-import 'package:devlearn/data/models/problem.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_highlight/flutter_highlight.dart';
-import 'package:flutter_highlight/theme_map.dart';
+import 'package:code_text_field/code_text_field.dart';
+// SỬA: Import theme phổ biến và có sẵn
+import 'package:flutter_highlight/themes/atom-one-dark.dart'; 
+import 'package:flutter_highlight/themes/atom-one-light.dart';
+import 'package:highlight/languages/cpp.dart';
+import 'package:highlight/languages/java.dart';
+import 'package:highlight/languages/python.dart';
+import 'package:highlight/languages/javascript.dart';
 
 class CodeEditor extends StatefulWidget {
-  final List<StarterCode> starterCode;
+  final Map<String, String> starterCode;
   final Function(String language, String code) onSubmit;
 
-  const CodeEditor({super.key, required this.starterCode, required this.onSubmit});
+  const CodeEditor({
+    super.key,
+    required this.starterCode,
+    required this.onSubmit,
+  });
 
   @override
   State<CodeEditor> createState() => _CodeEditorState();
@@ -15,143 +24,153 @@ class CodeEditor extends StatefulWidget {
 
 class _CodeEditorState extends State<CodeEditor> {
   late String _selectedLanguage;
-  late TextEditingController _codeController;
-  late StarterCode _currentStarterCode;
+  CodeController? _codeController;
 
   @override
   void initState() {
     super.initState();
-    _currentStarterCode = widget.starterCode.first;
-    _selectedLanguage = _currentStarterCode.language;
-    _codeController = TextEditingController(text: _currentStarterCode.code);
+    if (widget.starterCode.isNotEmpty) {
+      _selectedLanguage = widget.starterCode.keys.first;
+      _initializeController();
+    }
+  }
+
+  // SỬA: Không cần truy cập context ở đây nữa
+  void _initializeController() {
+    final sourceCode = widget.starterCode[_selectedLanguage] ?? '';
+    final languageMode = {
+      'cpp': cpp,
+      'java': java,
+      'python': python,
+      'javascript': javascript,
+    }[_selectedLanguage];
+
+    _codeController = CodeController(
+      text: sourceCode,
+      language: languageMode,
+      // SỬA: Xóa bỏ thuộc tính theme không hợp lệ
+    );
   }
 
   @override
-  void dispose() {
-    _codeController.dispose();
-    super.dispose();
-  }
-
-  void _onLanguageChanged(String? newLanguage) {
-    if (newLanguage != null) {
-      setState(() {
-        _selectedLanguage = newLanguage;
-        _currentStarterCode = widget.starterCode.firstWhere((sc) => sc.language == newLanguage);
-        _codeController.text = _currentStarterCode.code;
-      });
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Nếu controller chưa được khởi tạo, hãy thử lại
+    // Điều này có thể xảy ra nếu initState chạy trước khi context sẵn sàng
+    if (_codeController == null && widget.starterCode.isNotEmpty) {
+      _initializeController();
     }
   }
 
   @override
+  void dispose() {
+    _codeController?.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    if (_codeController == null) {
+      return const Center(child: Text("Đang tải trình soạn thảo..."));
+    }
+
     final theme = Theme.of(context);
+    // SỬA: Xác định theme cho code editor ngay trong hàm build
+    final codeTheme = theme.brightness == Brightness.dark
+        ? atomOneDarkTheme
+        : atomOneLightTheme;
 
     return Column(
       children: [
-        _buildToolbar(theme),
+        _buildLanguageSelector(theme),
         Expanded(
-          child: _buildCodeInput(theme),
+          child: CodeTheme(
+            // SỬA: Truyền theme đã xác định vào CodeTheme
+            data: CodeThemeData(styles: codeTheme),
+            child: SingleChildScrollView(
+              child: CodeField(
+                controller: _codeController!,
+                textStyle: const TextStyle(fontFamily: 'monospace', fontSize: 14),
+                minLines: 15,
+                expands: false,
+              ),
+            ),
+          ),
         ),
-        _buildActionBar(theme),
+        _buildActionButtons(theme),
       ],
     );
   }
 
-  Widget _buildToolbar(ThemeData theme) {
+  Widget _buildLanguageSelector(ThemeData theme) {
     return Container(
-      height: 50,
-      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-      decoration: BoxDecoration(
-        color: theme.cardColor,
-        border: Border(bottom: BorderSide(color: theme.dividerColor)),
-      ),
-      child: Row(
-        children: [
-          DropdownButton<String>(
-            value: _selectedLanguage,
-            onChanged: _onLanguageChanged,
-            items: widget.starterCode
-                .map((sc) => DropdownMenuItem(
-                      value: sc.language,
-                      child: Text(sc.language.toUpperCase()),
-                    ))
-                .toList(),
-            underline: const SizedBox(),
-            style: theme.textTheme.bodyMedium,
-            dropdownColor: theme.cardColor,
-          ),
-        ],
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      color: theme.colorScheme.surfaceVariant.withOpacity(0.3),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: _selectedLanguage,
+          isExpanded: true,
+          icon: const Icon(Icons.arrow_drop_down),
+          items: widget.starterCode.keys.map((String language) {
+            return DropdownMenuItem<String>(
+              value: language,
+              child: Text(
+                language.toUpperCase(),
+                style: theme.textTheme.labelLarge,
+              ),
+            );
+          }).toList(),
+          onChanged: (String? newValue) {
+            if (newValue != null && newValue != _selectedLanguage) {
+              setState(() {
+                _selectedLanguage = newValue;
+                _codeController?.dispose();
+                _initializeController();
+              });
+            }
+          },
+        ),
       ),
     );
   }
 
-  Widget _buildCodeInput(ThemeData theme) {
-    final codeTheme = theme.brightness == Brightness.dark 
-        ? themeMap['atom-one-dark']! 
-        : themeMap['atom-one-light']!;
-
-    return Container(
-      color: codeTheme['root']?.backgroundColor,
-      child: Stack(
-        children: [
-          HighlightView(
-            _codeController.text,
-            language: _selectedLanguage,
-            theme: codeTheme, 
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 60),
-            textStyle: const TextStyle(fontFamily: 'monospace', fontSize: 14),
-          ),
-          TextField(
-            controller: _codeController,
-            keyboardType: TextInputType.multiline,
-            maxLines: null,
-            autocorrect: false,
-            enableSuggestions: false,
-            // SỬA: Dùng đúng tên thuộc tính là `cursorColor`
-            cursorColor: theme.brightness == Brightness.dark ? Colors.white : Colors.black, 
-            style: const TextStyle(
-              fontFamily: 'monospace', 
-              fontSize: 14, 
-              color: Colors.transparent,
-            ),
-            decoration: const InputDecoration(
-              border: InputBorder.none,
-              contentPadding: EdgeInsets.all(16),
-            ),
-            onChanged: (value) => setState(() {}),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildActionBar(ThemeData theme) {
-    return Container(
-      height: 60,
-      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-      decoration: BoxDecoration(
-        color: theme.cardColor,
-        border: Border(top: BorderSide(color: theme.dividerColor)),
-      ),
+  Widget _buildActionButtons(ThemeData theme) {
+    return Padding(
+      padding: const EdgeInsets.all(12.0),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          ElevatedButton(
-            onPressed: () { /* TODO: Implement Run Code */ },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.grey.shade700,
-              foregroundColor: Colors.white,
+          Expanded(
+            child: OutlinedButton.icon(
+              icon: const Icon(Icons.play_arrow),
+              label: const Text('Chạy thử'),
+              onPressed: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Chức năng Chạy thử đang được phát triển!')),
+                );
+              },
+              style: OutlinedButton.styleFrom(
+                foregroundColor: theme.colorScheme.onSurface,
+                side: BorderSide(color: theme.colorScheme.outline),
+                padding: const EdgeInsets.symmetric(vertical: 12),
+              ),
             ),
-            child: const Text('Chạy thử'),
           ),
           const SizedBox(width: 12),
-          ElevatedButton(
-            onPressed: () => widget.onSubmit(_selectedLanguage, _codeController.text),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green,
-              foregroundColor: Colors.white,
+          Expanded(
+            child: ElevatedButton.icon(
+              icon: const Icon(Icons.send),
+              label: const Text('Nộp bài'),
+              onPressed: () {
+                if (_codeController != null) {
+                  widget.onSubmit(_selectedLanguage, _codeController!.text);
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+              ),
             ),
-            child: const Text('Nộp bài'),
           ),
         ],
       ),

@@ -1,7 +1,6 @@
 import 'package:devlearn/data/models/problem.dart';
 import 'package:devlearn/data/repositories/problem_repository.dart';
 import 'package:devlearn/features/problems/widgets/code_editor.dart';
-// THÊM: Import widget mới cho tab lịch sử
 import 'package:devlearn/features/problems/widgets/submission_history_tab.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
@@ -65,6 +64,9 @@ class _ProblemScreenState extends State<ProblemScreen> with TickerProviderStateM
 
           final problem = snapshot.data!;
 
+          // SỬA: Chuyển đổi List<StarterCode> thành Map<String, String>
+          final starterCodeMap = {for (var e in problem.starterCode) e.language: e.code};
+
           return Column(
             children: [
               TabBar(
@@ -78,13 +80,13 @@ class _ProblemScreenState extends State<ProblemScreen> with TickerProviderStateM
               Expanded(
                 child: TabBarView(
                   controller: _tabController,
-                  physics: const NeverScrollableScrollPhysics(),
+                  physics: const NeverScrollableScrollPhysics(), 
                   children: [
                     _buildDescriptionTab(problem),
-                    problem.starterCode.isNotEmpty
-                        ? CodeEditor(starterCode: problem.starterCode, onSubmit: _handleSubmit)
+                    // SỬA: Truyền starterCodeMap đã được chuyển đổi
+                    starterCodeMap.isNotEmpty
+                        ? CodeEditor(starterCode: starterCodeMap, onSubmit: _handleSubmit)
                         : const Center(child: Text('Phần code cho bài tập này chưa có sẵn.')),
-                    // SỬA: Tích hợp widget SubmissionHistoryTab
                     SubmissionHistoryTab(problemId: problem.id),
                   ],
                 ),
