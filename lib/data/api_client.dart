@@ -15,8 +15,7 @@ class ApiClient {
     '/auth/register',
     '/auth/refresh',
     '/auth/forgot-password',
-    '/auth/reset-password',
-    '/posts' 
+    '/auth/reset-password'
   ];
 
   ApiClient({
