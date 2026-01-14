@@ -16,10 +16,15 @@ class PostRepository {
         },
       );
 
-      if (response.statusCode == 200 && response.data['data'] != null) {
-        List<dynamic> postsJson = response.data['data'];
-        return postsJson.map((json) => Post.fromJson(json)).toList();
+      // SỬA LỖI: Xử lý đúng cấu trúc JSON trả về từ server
+      if (response.statusCode == 200 && response.data is Map<String, dynamic>) {
+        final responseData = response.data as Map<String, dynamic>;
+        if (responseData['data'] is List) {
+          final postsJson = responseData['data'] as List;
+          return postsJson.map((json) => Post.fromJson(json as Map<String, dynamic>)).toList();
+        }
       }
+      // Trả về danh sách rỗng nếu không có dữ liệu hoặc cấu trúc sai
       return [];
     } catch (e) {
       print(e);
