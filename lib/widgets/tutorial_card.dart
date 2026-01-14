@@ -1,5 +1,6 @@
 import 'package:devlearn/data/models/tutorial_summary.dart';
-import 'package:devlearn/features/tutorial/tutorial_screen.dart';
+// SỬA: Import màn hình chi tiết thay vì màn hình danh sách
+import 'package:devlearn/features/tutorial_detail/tutorial_detail_screen.dart'; 
 import 'package:flutter/material.dart';
 
 class TutorialCard extends StatelessWidget {
@@ -15,11 +16,11 @@ class TutorialCard extends StatelessWidget {
       clipBehavior: Clip.antiAlias, // Ensures the InkWell ripple is clipped to the card's rounded corners
       child: InkWell(
         onTap: () {
-          // Temporarily disabled until TutorialScreen is ready
+          // SỬA: Điều hướng đến TutorialDetailScreen và truyền vào `tutorialSummary`
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => TutorialScreen(tutorialId: tutorial.id),
+              builder: (context) => TutorialDetailScreen(tutorialSummary: tutorial),
             ),
           );
         },
