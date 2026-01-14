@@ -1,38 +1,34 @@
-import 'dart:convert';
+import 'package:devlearn/data/api_client.dart';
 import 'package:devlearn/data/models/tutorial_summary.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:http/http.dart' as http;
+import 'package:devlearn/main.dart';
 
 class TutorialRepository {
-  final _storage = const FlutterSecureStorage();
+  final ApiClient _apiClient = apiClient;
 
-  Future<List<TutorialSummary>> getTutorials() async {
-    final baseUrl = dotenv.env['BACKEND_URL'];
-    if (baseUrl == null) {
-      throw Exception('BACKEND_URL not found in .env file');
-    }
+  Future<Map<String, dynamic>> getTutorials({int page = 1, int limit = 10, String? tag}) async {
+    try {
+      final response = await _apiClient.get('/tutorials', queryParameters: {
+        'page': page,
+        'limit': limit,
+        if (tag != null) 'tag': tag,
+      });
 
-    final token = await _storage.read(key: 'accessToken');
-    if (token == null) {
-      throw Exception('Access token not found');
-    }
-
-    final response = await http.get(
-      Uri.parse('$baseUrl/tutorials'),
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
-      },
-    );
-
-    if (response.statusCode == 200) {
-      final List<dynamic> tutorialsJson = json.decode(response.body);
-      return tutorialsJson
-          .map((json) => TutorialSummary.fromJson(json))
-          .toList();
-    } else {
-      throw Exception('Failed to load tutorials: ${response.statusCode}');
+      if (response.statusCode == 200 && response.data['data'] != null) {
+        final List<dynamic> tutorialJson = response.data['data'];
+        final tutorials = tutorialJson.map((json) => TutorialSummary.fromJson(json)).toList();
+        
+        return {
+          'tutorials': tutorials,
+          'pagination': response.data['pagination'],
+        };
+      } else {
+        return {'tutorials': [], 'pagination': {}};
+      }
+    } catch (e) {
+      print('Failed to load tutorials: $e');
+      throw Exception('Failed to load tutorials: $e');
     }
   }
+
+  // Các hàm khác như getTutorialById, createTutorial sẽ được thêm vào đây sau
 }
