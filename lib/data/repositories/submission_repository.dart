@@ -5,32 +5,47 @@ import 'package:devlearn/main.dart';
 class SubmissionRepository {
   final ApiClient _apiClient = apiClient;
 
-  // Lấy lịch sử nộp bài cho một problem cụ thể
-  Future<List<Submission>> getSubmissions({required String problemId, String? userId}) async {
+  // Lấy lịch sử nộp bài
+  Future<List<Submission>> getSubmissions({required String problemId}) async {
     try {
-      // Xây dựng các query parameters để lọc
-      final Map<String, dynamic> queryParams = {
-        'problemId': problemId,
-      };
-
-      // (Tùy chọn) Nếu có userId, chỉ lấy các bài nộp của user đó
-      if (userId != null) {
-        queryParams['userId'] = userId;
-      }
-
-      final response = await _apiClient.get('/submissions', queryParameters: queryParams);
-
-      if (response.statusCode == 200 && response.data['data'] != null) {
-        final List<dynamic> submissionsJson = response.data['data'];
+      final response = await _apiClient.get(
+        '/submissions',
+        queryParameters: {'problemId': problemId},
+      );
+      
+      // SỬA: Dữ liệu nằm trong key 'submissions' theo code backend mới
+      if (response.statusCode == 200 && response.data['submissions'] != null) {
+        final List<dynamic> submissionsJson = response.data['submissions'];
         return submissionsJson.map((json) => Submission.fromJson(json)).toList();
       }
-
-      return []; // Trả về danh sách rỗng nếu không có dữ liệu
-
+      return [];
     } catch (e) {
       print('Failed to load submissions: $e');
-      // Ném lại lỗi để UI có thể xử lý
       throw Exception('Failed to load submissions: $e');
+    }
+  }
+
+  // THÊM: Tạo một lần nộp bài mới
+  Future<String> createSubmission({required String problemId, required String language, required String code}) async {
+    try {
+      final response = await _apiClient.post(
+        '/submissions',
+        data: {
+          'problemId': problemId,
+          'language': language,
+          'code': code,
+        },
+      );
+
+      if (response.statusCode == 201 && response.data['submissionId'] != null) {
+        return response.data['submissionId'];
+      } else {
+        throw Exception('Failed to create submission: Invalid response from server');
+      }
+    } catch (e) {
+      print('Failed to create submission: $e');
+      // Ném lỗi để UI có thể bắt và hiển thị thông báo
+      throw Exception('Failed to create submission: $e');
     }
   }
 }

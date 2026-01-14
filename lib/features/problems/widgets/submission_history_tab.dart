@@ -3,29 +3,33 @@ import 'package:devlearn/data/repositories/submission_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
+// SỬA: Key được truyền vào từ bên ngoài
 class SubmissionHistoryTab extends StatefulWidget {
   final String problemId;
-  const SubmissionHistoryTab({super.key, required this.problemId});
+  const SubmissionHistoryTab({required Key key, required this.problemId})
+      : super(key: key);
 
   @override
-  State<SubmissionHistoryTab> createState() => _SubmissionHistoryTabState();
+  // SỬA: State class được đặt tên công khai để có thể truy cập từ key
+  SubmissionHistoryTabState createState() => SubmissionHistoryTabState();
 }
 
-class _SubmissionHistoryTabState extends State<SubmissionHistoryTab> {
+class SubmissionHistoryTabState extends State<SubmissionHistoryTab> {
   late Future<List<Submission>> _submissionsFuture;
   final SubmissionRepository _submissionRepository = SubmissionRepository();
 
   @override
   void initState() {
     super.initState();
-    // Thêm ngôn ngữ tiếng Việt cho timeago
     timeago.setLocaleMessages('vi', timeago.ViMessages());
-    _loadSubmissions();
+    refresh(); // Tải dữ liệu lần đầu
   }
 
-  void _loadSubmissions() {
+  // THÊM: Phương thức public để tải lại dữ liệu từ bên ngoài
+  void refresh() {
     setState(() {
-      _submissionsFuture = _submissionRepository.getSubmissions(problemId: widget.problemId);
+      _submissionsFuture = 
+          _submissionRepository.getSubmissions(problemId: widget.problemId);
     });
   }
 
@@ -34,12 +38,10 @@ class _SubmissionHistoryTabState extends State<SubmissionHistoryTab> {
     return FutureBuilder<List<Submission>>(
       future: _submissionsFuture,
       builder: (context, snapshot) {
-        // 1. Trạng thái đang tải
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
         }
 
-        // 2. Trạng thái lỗi
         if (snapshot.hasError) {
           return Center(
             child: Padding(
@@ -49,20 +51,32 @@ class _SubmissionHistoryTabState extends State<SubmissionHistoryTab> {
           );
         }
 
-        // 3. Không có dữ liệu hoặc danh sách rỗng
         if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return const Center(
-            child: Text(
-              'Chưa có lần nộp bài nào cho bài tập này.',
-              textAlign: TextAlign.center,
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text(
+                    'Chưa có lần nộp bài nào.', 
+                    textAlign: TextAlign.center
+                  ),
+                  const SizedBox(height: 8),
+                  ElevatedButton.icon(
+                    icon: const Icon(Icons.refresh),
+                    label: const Text('Tải lại'),
+                    onPressed: refresh,
+                  )
+                ],
+              ),
             ),
           );
         }
 
-        // 4. Hiển thị danh sách
         final submissions = snapshot.data!;
         return RefreshIndicator(
-          onRefresh: () async => _loadSubmissions(),
+          onRefresh: () async => refresh(),
           child: ListView.builder(
             itemCount: submissions.length,
             itemBuilder: (context, index) {
@@ -80,7 +94,7 @@ class _SubmissionHistoryTabState extends State<SubmissionHistoryTab> {
     final statusColor = _getStatusColor(submission.status);
 
     return ListTile(
-      leading: Icon(Icons.history, color: theme.colorScheme.secondary),
+      leading: Icon(_getStatusIcon(submission.status), color: statusColor, size: 30),
       title: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -89,7 +103,7 @@ class _SubmissionHistoryTabState extends State<SubmissionHistoryTab> {
             style: TextStyle(color: statusColor, fontWeight: FontWeight.bold),
           ),
           Text(
-            submission.language,
+            submission.language.toUpperCase(),
             style: theme.textTheme.bodySmall,
           ),
         ],
@@ -98,7 +112,6 @@ class _SubmissionHistoryTabState extends State<SubmissionHistoryTab> {
         'Nộp ${timeago.format(submission.createdAt, locale: 'vi')}',
       ),
       onTap: () {
-        // TODO: Hiển thị chi tiết lần nộp bài, bao gồm code và kết quả chi tiết
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Chức năng xem chi tiết đang được phát triển!')),
         );
@@ -106,21 +119,37 @@ class _SubmissionHistoryTabState extends State<SubmissionHistoryTab> {
     );
   }
 
+  IconData _getStatusIcon(String status) {
+    switch (status) {
+      case 'Accepted':
+        return Icons.check_circle;
+      case 'Wrong Answer':
+      case 'Runtime Error':
+        return Icons.cancel;
+      case 'Time Limit Exceeded':
+        return Icons.timer_off;
+      case 'Pending':
+      case 'Running':
+        return Icons.hourglass_top;
+      default:
+        return Icons.help_outline;
+    }
+  }
+
   Color _getStatusColor(String status) {
     switch (status) {
       case 'Accepted':
-        return Colors.green;
+        return Colors.green.shade600;
       case 'Wrong Answer':
-        return Colors.red;
       case 'Runtime Error':
-        return Colors.orange;
+        return Colors.red.shade600;
       case 'Time Limit Exceeded':
-        return Colors.deepOrange;
+        return Colors.orange.shade800;
       case 'Pending':
       case 'Running':
-        return Colors.blue;
+        return Colors.blue.shade600;
       default:
-        return Colors.grey;
+        return Colors.grey.shade600;
     }
   }
 }

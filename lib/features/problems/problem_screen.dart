@@ -1,5 +1,7 @@
 import 'package:devlearn/data/models/problem.dart';
 import 'package:devlearn/data/repositories/problem_repository.dart';
+// THÊM: Import repository cho submission
+import 'package:devlearn/data/repositories/submission_repository.dart';
 import 'package:devlearn/features/problems/widgets/code_editor.dart';
 import 'package:devlearn/features/problems/widgets/submission_history_tab.dart';
 import 'package:flutter/material.dart';
@@ -14,24 +16,70 @@ class ProblemScreen extends StatefulWidget {
 }
 
 class _ProblemScreenState extends State<ProblemScreen> with TickerProviderStateMixin {
-  final ProblemRepository _repo = ProblemRepository();
+  // THÊM: Khởi tạo các repository và controller cần thiết
+  final ProblemRepository _problemRepo = ProblemRepository();
+  final SubmissionRepository _submissionRepo = SubmissionRepository();
   late Future<Problem> _problemFuture;
   late TabController _tabController;
+  // THÊM: GlobalKey để có thể gọi phương thức của State con
+  final _historyTabKey = GlobalKey<SubmissionHistoryTabState>();
+
 
   @override
   void initState() {
     super.initState();
-    _problemFuture = _repo.getProblemById(widget.problemId);
+    _problemFuture = _problemRepo.getProblemById(widget.problemId);
     _tabController = TabController(length: 3, vsync: this);
   }
 
-  void _handleSubmit(String language, String code) {
-    // TODO: Tích hợp API chấm điểm
-    print('Submitting code for $language:');
-    print(code);
+  // SỬA: Triển khai logic nộp bài hoàn chỉnh
+  Future<void> _handleSubmit(String language, String code) async {
+    // Hiển thị loading indicator
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Chức năng nộp bài đang được phát triển!')),
+      SnackBar(
+        content: Row(
+          children: const [ 
+            CircularProgressIndicator(),
+            SizedBox(width: 16), 
+            Text("Đang nộp bài..."),
+          ],
+        ),
+        duration: const Duration(minutes: 1), // Giữ snackbar mở
+      ),
     );
+
+    try {
+      final submissionId = await _submissionRepo.createSubmission(
+        problemId: widget.problemId,
+        language: language,
+        code: code,
+      );
+
+      // Ẩn loading và hiển thị thông báo thành công
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Nộp bài thành công! Kết quả sẽ sớm được cập nhật.'),
+          backgroundColor: Colors.green,
+        ),
+      );
+
+      // Tự động chuyển sang tab lịch sử
+      _tabController.animateTo(2);
+
+      // Gọi phương thức refresh của tab lịch sử để cập nhật danh sách
+      _historyTabKey.currentState?.refresh();
+
+    } catch (e) {
+      // Ẩn loading và hiển thị thông báo lỗi
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Nộp bài thất bại: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   @override
@@ -63,8 +111,6 @@ class _ProblemScreenState extends State<ProblemScreen> with TickerProviderStateM
           }
 
           final problem = snapshot.data!;
-
-          // SỬA: Chuyển đổi List<StarterCode> thành Map<String, String>
           final starterCodeMap = {for (var e in problem.starterCode) e.language: e.code};
 
           return Column(
@@ -83,11 +129,11 @@ class _ProblemScreenState extends State<ProblemScreen> with TickerProviderStateM
                   physics: const NeverScrollableScrollPhysics(), 
                   children: [
                     _buildDescriptionTab(problem),
-                    // SỬA: Truyền starterCodeMap đã được chuyển đổi
                     starterCodeMap.isNotEmpty
                         ? CodeEditor(starterCode: starterCodeMap, onSubmit: _handleSubmit)
                         : const Center(child: Text('Phần code cho bài tập này chưa có sẵn.')),
-                    SubmissionHistoryTab(problemId: problem.id),
+                    // SỬA: Gắn GlobalKey vào SubmissionHistoryTab
+                    SubmissionHistoryTab(key: _historyTabKey, problemId: problem.id),
                   ],
                 ),
               ),
@@ -98,6 +144,7 @@ class _ProblemScreenState extends State<ProblemScreen> with TickerProviderStateM
     );
   }
 
+  // ... (các hàm build khác giữ nguyên) ...
   Widget _buildDescriptionTab(Problem problem) {
     final theme = Theme.of(context);
     final double acceptanceRate = (problem.totalSubmissions > 0)
