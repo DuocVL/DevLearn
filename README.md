@@ -7,6 +7,7 @@ DevLearn là một hệ sinh thái học tập lập trình "tất cả trong m�
 - **Kết hợp Lý thuyết & Thực hành:** Tạo ra một vòng lặp học tập khép kín: Học lý thuyết trong các bài giảng -> Áp dụng ngay vào bài tập lập trình -> Nhận phản hồi tức thì từ hệ thống.
 - **Phản hồi Tức thì & Chính xác:** Xây dựng một hệ thống chấm bài tự động, an toàn và có khả năng mở rộng để đánh giá code của người dùng với nhiều loại kết quả (Accepted, Wrong Answer, Time Limit Exceeded, ...).
 - **Xây dựng Cộng đồng:** Thúc đẩy môi trường học tập tương tác thông qua các tính năng bình luận, thảo luận và bày tỏ cảm xúc.
+<img width="1186" height="803" alt="image" src="https://github.com/user-attachments/assets/f5fbdf05-ce19-45b0-a431-329d73c00102" />
 
 ## ✨ Tính năng nổi bật
 
